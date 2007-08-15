@@ -1,0 +1,33 @@
+Requirements
+------------
+
+  * Ruby 1.8
+  * Tons of metadata extractor programs
+
+Install
+-------
+
+  De-compress archive and enter its top directory.
+  Then type:
+
+   ($ su)
+    # ruby setup.rb
+
+  These simple step installs this program under the default
+  location of Ruby libraries.  You can also install files into
+  your favorite directory by supplying setup.rb some options.
+  Try "ruby setup.rb --help".
+
+
+Usage
+-----
+
+
+License
+-------
+
+  Ruby's
+
+
+Ilmari Heikkinen <ilmari.heikkinen gmail com>
+http://metadater.rubyforge.org

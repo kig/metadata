@@ -1,0 +1,49 @@
+#!/usr/bin/ruby
+require 'metadata'
+require 'optparse'
+require 'yaml'
+
+options = {}
+opts = OptionParser.new do |opts|
+  opts.banner = "#{$0} [options] filename [filename ...]"
+
+  opts.separator ""
+  opts.on("-e", "Extract file"){|p| options[:extract] = true }
+  opts.on("-p", "Only print out metadata"){|p| options[:print] = true }
+end
+
+opts.parse!(ARGV)
+filenames = ARGV
+
+if filenames.empty?
+  puts opts.banner
+  exit!(1)
+end
+
+filenames.each do |fn|
+  if options[:extract]
+    f2n = fn.sub(/\.mhd$/, '')
+    File.open(fn,'rb'){|f|
+      mdh_sz = f.read(4).unpack("N")[0]
+      if options[:print]
+      	STDOUT.write(f.read(mdh_sz))
+      else
+        f.seek(4+mdh_sz)
+        File.open(f2n, 'w'){|f2|
+          f2.write(f.read(1048576)) until f.eof?
+        }
+      end
+    }
+  elsif options[:print]
+    STDOUT.write(fn.to_pn.metadata.to_yaml)
+  else
+    File.open(fn+'.mhd','wb'){|f|
+      d = fn.to_pn.metadata.to_yaml
+      f.write( [d.size].pack("N") )
+      f.write(d)
+      File.open(fn, 'rb'){|f2|
+        f.write(f2.read(1048576)) until f2.eof?
+      }
+    }
+  end
+end
