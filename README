@@ -1,13 +1,15 @@
 Description
 -----------
 
-  This Metadata package comes with a library called `metadata' and
-  a small program, `mdh', that can print out file metadata as YAML and
-  package the metadata with the file.
+  This package `Metadata' comes with a library called `metadata' and
+  a small program called `mdh'.
   
   The library probes files for their metadata (e.g. jpeg dimensions
   and camera make, mp3 artist, pdf word count) and returns the metadata
-  as a hash. 
+  as a Hash.
+
+  Mdh can print out file metadata as YAML and package the metadata 
+  with the file.
 
   This package has many dependencies since there is no single universal 
   metadata header format that all files use. Blame resource forks, filename
