@@ -10,8 +10,6 @@ Gem::Specification.new do |s|
   s.date = date
   s.summary = 'Metadata extractor'
   s.email = 'ilmari.heikkinen@gmail.com'
-  # s.homepage = 'metadata.rubyforge.org'
-  s.rubyforge_project = 'metadata'
   s.authors = ['Ilmari Heikkinen']
   s.files = FileList[
     'lib/metadata.rb',
@@ -21,5 +19,6 @@ Gem::Specification.new do |s|
     'lib/metadata/mp3info.rb'
   ].to_a
   s.executables << 'mdh'
+  s.executables << 'chardet'
   s.required_ruby_version = '>= 1.8.1'
 end
