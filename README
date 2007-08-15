@@ -1,3 +1,39 @@
+Description
+-----------
+
+  This Metadata package comes with a library called `metadata' and
+  a small program, `mdh', that can print out file metadata as YAML and
+  package the metadata with the file.
+  
+  The library probes files for their metadata (e.g. jpeg dimensions
+  and camera make, mp3 artist, pdf word count) and returns the metadata
+  as a hash. 
+
+  This package has many dependencies since there is no single universal 
+  metadata header format that all files use. Blame resource forks, filename
+  extensions, bags of bytes and mimetypes.
+
+
+Usage
+-----
+
+  # print out metadata header
+  mdh -p myfile.jpg 
+
+  # create myfile.jpg.mdh, which consists of metadata header + myfile.jpg
+  mdh myfile.jpg 
+
+  # print out metadata header from mdh file
+  mdh -e -p myfile.jpg.mdh
+
+  # strip out metadata header from mdh file and save it to myfile.jpg
+  mdh -e myfile.jpg.mdh
+  
+irb> Metadata.extract('myfile.jpg')
+irb> Metadata.extract_text('myfile.jpg')
+irb> Pathname.new("myfile.jpg").metadata
+
+
 Requirements
 ------------
 
@@ -40,10 +76,6 @@ Install
   location of Ruby libraries.  You can also install files into
   your favorite directory by supplying setup.rb some options.
   Try "ruby setup.rb --help".
-
-
-Usage
------
 
 
 License
