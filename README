@@ -2,7 +2,30 @@ Requirements
 ------------
 
   * Ruby 1.8
-  * Tons of metadata extractor programs
+  
+  * Tons of metadata extraction programs, 
+    list of debian packages follows:
+      dcraw
+      libimlib2-ruby
+      extract
+      libimage-exiftool-perl
+      poppler-utils
+      mplayer
+      html2text
+      imagemagick
+      unhtml
+      pstotext
+      antiword
+      catdoc
+      shared-mime-info
+      
+  * You do want to install the latest versions of dcraw and 
+    shared-mime-info to be able to handle camera raw images.
+    http://cybercom.net/~dcoffin/dcraw/
+    http://freedesktop.org/wiki/Software/shared-mime-info
+    
+  * Python + chardet library
+    http://chardet.feedparser.org/
 
 Install
 -------
@@ -30,4 +53,3 @@ License
 
 
 Ilmari Heikkinen <ilmari.heikkinen gmail com>
-http://metadater.rubyforge.org

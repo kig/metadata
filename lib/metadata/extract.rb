@@ -1,8 +1,3 @@
-begin
-  require 'rubygems'
-rescue LoadError
-end  
-
 require 'metadata/mp3info'
 require 'metadata/mime_info'
 require 'imlib2'
@@ -112,9 +107,13 @@ end
 module Metadata
 extend self
 
-  # Extracts metadata from a file.
+  # Extracts metadata from a file by guessing mimetype and calling matching
+  # extractor methods (which mostly call external programs to do their bidding.)
   #
-  # Metadata.extract('foo.png')
+  #   Metadata.extract('foo.png')
+  #
+  # Mostly follows the shared-metadata-spec naming.
+  # http://wiki.freedesktop.org/wiki/Specifications/shared-filemetadata-spec
   #
   def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil)
     filename = filename.to_s
