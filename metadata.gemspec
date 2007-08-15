@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.date = date
   s.summary = 'Metadata extractor'
   s.email = 'ilmari.heikkinen@gmail.com'
-  s.homepage = 'metadata.rubyforge.org'
+  # s.homepage = 'metadata.rubyforge.org'
   s.rubyforge_project = 'metadata'
   s.authors = ['Ilmari Heikkinen']
   s.files = FileList[
