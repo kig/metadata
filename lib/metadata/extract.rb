@@ -6,10 +6,10 @@ end
 require 'flacinfo'
 require 'wmainfo'
 require 'mp4info'
-require 'apetag'
+require 'imlib2'
+
 require 'metadata/mp3info'
 require 'metadata/mime_info'
-require 'imlib2'
 require 'iconv'
 require 'time'
 require 'pathname'
@@ -138,7 +138,7 @@ extend self
           rv = __send__( mn, filename, charset )
           break
         rescue => e
-          puts e, e.message, e.backtrace
+          STDERR.puts e, e.message, e.backtrace
         end
       end
       mt = mts.shift
@@ -148,6 +148,7 @@ extend self
     rv['File.Size'] = File.size(filename.to_s)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false)
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
+    rv.delete_if{|k,v| v.nil? }
     rv
   end
 
@@ -162,12 +163,12 @@ extend self
         begin
           return __send__( mn, filename, charset, layout )
         rescue => e
-          puts e, e.message, e.backtrace
+          STDERR.puts e, e.message, e.backtrace
         end
       end
       mt = mt.ancestors[1]
     end
-    ""
+    nil
   end
 
   alias_method :[], 'extract'
@@ -283,7 +284,14 @@ extend self
     }
   end
 
-  def audio_x_ape(fn, charset)
+  def audio_x_wav(fn, charset)
+    h = `extract #{fn.dump}`.strip.split("\n").map{|s| s.split(" - ",2) }.to_hash
+    dur, rate, chans = h['format'].split(", ")
+    md = {
+      'Audio.Samplerate' => parse_num(rate, :i),
+      'Audio.Duration' => parse_num(dur, :f) / 1000,
+      'Audio.Channels' => (chans == 'stereo' ? 2 : 1)
+    }
   end
 
   def application_pdf(fname, charset)
@@ -313,6 +321,7 @@ extend self
       extract_extract_info(filename)
     end
   end
+  alias_method :application_x_gzpostscript, :application_postscript
 
   def text_html(fname, charset)
     words = `html2text #{fname.dump} | wc -w 2>/dev/null`.strip.to_i
@@ -422,6 +431,21 @@ extend self
     enc_utf8(str, "ISO-8859-1") # pstotext outputs iso-8859-1
   end
 
+  def application_x_gzpostscript__gettext(filename, charset, layout=false)
+    page = 0
+    str = `zcat #{filename.dump} | pstotext -`
+    if layout
+      str.gsub!(/\f/u, "\f\n")
+      str.gsub!(/^/u, " ")
+      str.gsub!(/\A| ?\f/u) {|pg|
+        "\nPage #{page+=1}.\n"
+      }
+      str.sub!(/\n+/, "")
+      str.sub!(/1\./, "1.\n")
+    end
+    enc_utf8(str, "ISO-8859-1") # pstotext outputs iso-8859-1
+  end
+  
   def application_msword__gettext(filename, charset, layout=false)
     enc_utf8(`antiword #{filename.dump}`, charset)
   end
@@ -506,7 +530,7 @@ extend self
       if File.exist?(pdf)
         application_pdf__gettext(pdf, charset, layout)
       else
-        ''
+        nil
       end
     end
   }
@@ -541,7 +565,9 @@ extend self
   end
 
   def extract_extract_info(fname)
-    h = `extract #{fname.dump}`.strip.split("\n").map{|s| s.split(" - ",2) }.to_hash
+    arr = `extract #{fname.dump}`.strip.split("\n").map{|s| s.split(" - ",2) }
+    h = arr.to_hash
+    filenames = arr.find_all{|k,v| k == 'filename' }.map{|k,v| enc_utf8(v, nil) }
     {
       'Doc.Title', enc_utf8(h['title'], nil),
       'Doc.Language', enc_utf8(h['language'], nil),
@@ -551,7 +577,8 @@ extend self
       'Doc.Modified', parse_time(h['modification date']),
       'Doc.Description', enc_utf8(h['description'], nil),
       'File.Software', enc_utf8(h['software'], nil),
-      'Doc.WordCount', h['word count'].to_i
+      'Archive.Contents', filenames,
+      'Doc.WordCount', parse_num(h['word count'], :i)
     }
   end
 
@@ -653,11 +680,21 @@ extend self
     return nil if s.nil? or s.empty? or not s.scan(/[0-9]+/)[0]
     case cast
     when :i
-      s.scan(/[0-9]+/)[0].to_i
+      num = nil
+      s.sub(/[0-9]+/){|h| num = h }
+      if num
+        num.to_i
+      else
+        nil
+      end
     when :f
       num = nil
       s.sub(/[0-9]+(\.[0-9]+(e[-+]?[0-9]+)?)?/i){|h| num = h }
-      num.to_f
+      if num
+        num.to_f
+      else
+        nil
+      end
     else
       s.scan(/[0-9]+/)[0]
     end

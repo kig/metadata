@@ -36,13 +36,51 @@ irb> Metadata.extract_text('myfile.jpg')
 irb> Pathname.new("myfile.jpg").metadata
 
 
+List of supported formats
+-------------------------
+
+  Audio:
+    Successfully tested with:
+      mp3, flac, ogg, wav
+    Should also work:
+      wma, m4a
+
+  Video:
+    What you manage to make mplayer play, which can be just about anything.
+    Then again, missing title and author data, etc. (do videos even have those?)
+    Successfully tested with:
+      wmv, mov, divx, xvid, flv, ogm, mpg
+
+  Images:
+    Should handle pretty much anything (apart from XCF and ORF.)
+    Successfully tested with:
+      jpeg, png, gif, nef, dng, crw, pef, psd
+
+  Documents:
+    Successfully tested with:
+      pdf, ppt, odp, sxi, ps, ps.gz, html, txt
+    Should work:
+    - OpenOffice docs work to some degree (personally, I'm using unoconv to
+      convert OO docs to temp PDFs for the text & dimensions extraction, so
+      those bits of data are missing.)
+    - MS Office docs to some degree (ppt at least, doc and xls should work too,
+      dimensions missing due to the above temp PDF -thing.)
+
+  Others:
+    Whatever extract spits out on the five or six bits of metadata I'm using
+    from it. Archive contents at least.
+
 Requirements
 ------------
 
   * Ruby 1.8
   
-  * Tons of metadata extraction programs, 
-    list of debian packages follows:
+  * Tons of metadata extraction programs and libs,
+    list of gems:
+      flacinfo-rb
+      wmainfo-rb
+      MP4info
+    list of debian packages:
       dcraw
       libimlib2-ruby
       extract
@@ -56,6 +94,7 @@ Requirements
       antiword
       catdoc
       shared-mime-info
+      vorbis-tools
       
   * You do want to install the latest versions of dcraw and 
     shared-mime-info to be able to handle camera raw images.
