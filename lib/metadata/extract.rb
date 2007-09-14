@@ -1,3 +1,12 @@
+begin
+  require 'rubygems'
+rescue LoadError
+end
+
+require 'flacinfo'
+require 'wmainfo'
+require 'mp4info'
+require 'apetag'
 require 'metadata/mp3info'
 require 'metadata/mime_info'
 require 'imlib2'
@@ -173,15 +182,108 @@ extend self
         'Audio.Title' => enc_utf8(t['title'], charset),
         'Audio.Artist' => enc_utf8(t['artist'], charset),
         'Audio.Album' => enc_utf8(t['album'], charset),
-        'Audio.Bitrate' => m.bitrate.to_i*1000,
+        'Audio.Bitrate' => m.bitrate.to_f,
         'Audio.Duration' => m.length.to_f,
         'Audio.Samplerate' => m.samplerate.to_i,
         'Audio.VariableBitrate' => m.vbr,
         'Audio.Genre' => enc_utf8(t['genre_s'], charset),
         'Audio.ReleaseDate' => parse_time(t['year']),
-        'Audio.TrackNo' => parse_num(t['tracknum'])
+        'Audio.TrackNo' => parse_num(t['tracknum'], :i)
       }
     end
+  end
+
+  def audio_x_flac(fn, charset)
+    m = FlacInfo.new(fn)
+    t = m.tags
+    si = m.streaminfo
+    len = si["total_samples"].to_f / si["samplerate"]
+    md = {
+      'Audio.Title' => enc_utf8(t['TITLE'], charset),
+      'Audio.Artist' => enc_utf8(t['ARTIST'], charset),
+      'Audio.Album' => enc_utf8(t['ALBUM'], charset),
+      'Audio.Bitrate' => File.size(fn)*8 / len,
+      'Audio.Duration' => len,
+      'Audio.Samplerate' => si["samplerate"],
+      'Audio.VariableBitrate' => true,
+      'Audio.Genre' => enc_utf8(t['GENRE'], charset),
+      'Audio.ReleaseDate' => parse_time(t['DATE']),
+      'Audio.TrackNo' => parse_num(t['TRACKNUMBER'], :i),
+      'Audio.Channels' => si["channels"]
+    }
+  end
+
+  def audio_mp4(fn, charset)
+    m = MP4Info.open(fn)
+    tn, total = m.TRKN
+    md = {
+      'Audio.Title' => enc_utf8(m.NAM, charset),
+      'Audio.Artist' => enc_utf8(m.ART, charset),
+      'Audio.Album' => enc_utf8(m.ALB, charset),
+      'Audio.Bitrate' => m.BITRATE,
+      'Audio.Duration' => m.SECS,
+      'Audio.Samplerate' => m.FREQUENCY*1000,
+      'Audio.VariableBitrate' => true,
+      'Audio.Genre' => enc_utf8(m.GNRE, charset),
+      'Audio.ReleaseDate' => parse_time(m.DAY),
+      'Audio.TrackNo' => parse_num(tn, :i),
+      'Audio.AlbumTrackCount' => parse_num(total, :i),
+      'Audio.Writer' => enc_utf8(m.WRT, charset),
+      'Audio.Copyright' => enc_utf8(m.CPRT, charset),
+      'Audio.Tempo' => parse_num(TMPO, :i)
+    }
+  end
+
+  def audio_x_ms_wma(fn, charset)
+    m = WmaInfo.new(fn)
+    t = m.tags
+    si = m.info
+    md = {
+      'Audio.Title' => enc_utf8(t['Title'], charset),
+      'Audio.Artist' => enc_utf8(t['Author'], charset),
+      'Audio.Album' => enc_utf8(t['AlbumTitle'], charset),
+      'Audio.AlbumArtist' => enc_utf8(t['AlbumArtist'], charset),
+      'Audio.Bitrate' => si["bitrate"] / 1000.0,
+      'Audio.Duration' => si["playtime_seconds"],
+      'Audio.Genre' => enc_utf8(t['Genre'], charset),
+      'Audio.ReleaseDate' => parse_time(t['Year']),
+      'Audio.TrackNo' => parse_num(t['TrackNumber'], :i),
+      'Audio.Copyright' => enc_utf8(t['Copyright'], charset)
+    }
+  end
+
+  def audio_x_vorbis_ogg(fn, charset)
+    ogginfo = `ogginfo '#{fn.gsub("'", "\\\\'")}'`.strip.split("\n")
+    t = ogginfo.grep(/^.+[:=]/i).map{|line|
+      k,v = line.strip.split(/[=:]/, 2)
+      [k.downcase, v.strip]
+    }.to_hash
+    len = t['playback length'].split(":").inject(0){|s, ts|
+      s + case ts[-1,1]
+          when 'h'
+            3600 * ts.to_f
+          when 'm'
+            60 * ts.to_f
+          else
+            ts.to_f
+          end
+    }
+    md = {
+      'Audio.Title' => enc_utf8(t['title'], charset),
+      'Audio.Artist' => enc_utf8(t['artist'], charset),
+      'Audio.Album' => enc_utf8(t['album'], charset),
+      'Audio.Bitrate' => parse_num(t['nominal bitrate'], :f),
+      'Audio.Samplerate' => parse_num(t['rate'], :i),
+      'Audio.Duration' => len,
+      'Audio.Genre' => enc_utf8(t['genre'], charset),
+      'Audio.ReleaseDate' => parse_time(t['date']),
+      'Audio.TrackNo' => parse_num(t['tracknumber'], :i),
+      'Audio.Channels' => parse_num(t["channels"], :i),
+      'Audio.Comment' => enc_utf8(t['comment'], charset)
+    }
+  end
+
+  def audio_x_ape(fn, charset)
   end
 
   def application_pdf(fname, charset)
@@ -546,10 +648,19 @@ extend self
     s.to_utf8(charset)
   end
 
-  def parse_num(s)
+  def parse_num(s, cast=nil)
     return s if s.is_a? Numeric
-    return nil if s.nil? or s.empty?
-    s.scan(/[0-9]+/)[0]
+    return nil if s.nil? or s.empty? or not s.scan(/[0-9]+/)[0]
+    case cast
+    when :i
+      s.scan(/[0-9]+/)[0].to_i
+    when :f
+      num = nil
+      s.sub(/[0-9]+(\.[0-9]+(e[-+]?[0-9]+)?)?/i){|h| num = h }
+      num.to_f
+    else
+      s.scan(/[0-9]+/)[0]
+    end
   end
 
   def parse_time(s)
