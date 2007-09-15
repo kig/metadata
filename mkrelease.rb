@@ -5,7 +5,7 @@ require 'fileutils'
 
 dn = "metadata-#{Metadata::VERSION}"
 FileUtils.mkdir(dn)
-%w(lib bin README INSTALL).each{|fn|
+%w(lib bin README INSTALL setup.rb).each{|fn|
   FileUtils.cp_r(fn, dn)
 }
 `tar zcf #{dn}.tar.gz #{dn}`
