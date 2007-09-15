@@ -110,6 +110,8 @@ public
     application/x-compressed-tar
     application/x-bzip-compressed-tar
     image/tiff
+    video/x-theora+ogg
+    audio/x-vorbis+ogg
   )
 
   def generic_type?(t)

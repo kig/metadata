@@ -359,8 +359,18 @@ extend self
       'Audio.Samplerate', h['audio_rate']
     }
   end
-
   alias_method('application_x_flash_video', 'video')
+
+  def video_x_theora_ogg(fname, charset)
+    h = video(fname, charset)
+    wma = audio_x_vorbis_ogg(fname, charset)
+    %w(
+      Artist Title Album Genre ReleaseDate TrackNo VariableBitrate
+    ).each{|t|
+      h['Video.'+t] = wma['Audio.'+t]
+    }
+    h
+  end
 
   def video_x_ms_wmv(fname, charset)
     h = video(fname, charset)
