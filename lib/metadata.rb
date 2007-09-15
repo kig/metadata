@@ -1,5 +1,5 @@
 require 'metadata/extract.rb'
 
 module Metadata
-  VERSION = '0.2'
+  VERSION = '0.3'
 end

@@ -244,12 +244,13 @@ extend self
       'Audio.Artist' => enc_utf8(t['Author'], charset),
       'Audio.Album' => enc_utf8(t['AlbumTitle'], charset),
       'Audio.AlbumArtist' => enc_utf8(t['AlbumArtist'], charset),
-      'Audio.Bitrate' => si["bitrate"] / 1000.0,
+      'Audio.Bitrate' => si["bitrate"],
       'Audio.Duration' => si["playtime_seconds"],
       'Audio.Genre' => enc_utf8(t['Genre'], charset),
       'Audio.ReleaseDate' => parse_time(t['Year']),
       'Audio.TrackNo' => parse_num(t['TrackNumber'], :i),
-      'Audio.Copyright' => enc_utf8(t['Copyright'], charset)
+      'Audio.Copyright' => enc_utf8(t['Copyright'], charset),
+      'Audio.VariableBitrate' => (si['IsVBR'] == 1)
     }
   end
 
@@ -347,17 +348,34 @@ extend self
       'Image.Width', h['video_width'],
       'Image.Height', h['video_height'],
       'Image.DimensionUnit', 'px',
-      'Video.Length', (h['length'].to_i > 0) ? h['length'] : nil,
+      'Video.Duration', (h['length'].to_i > 0) ? h['length'] : nil,
       'Video.Framerate', h['video_fps'],
-      'Video.Bitrate', h['video_bitrate'],
+      'Video.Bitrate', h['video_bitrate'] && h['video_bitrate'] != 0 ?
+                       h['video_bitrate'] / 1000.0 : nil,
       'Video.Codec', h['video_format'].to_s,
-      'Audio.Bitrate', h['audio_bitrate'],
+      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != 0 ?
+                       h['audio_bitrate'] / 1000.0 : nil,
       'Audio.Codec', h['audio_format'].to_s,
       'Audio.Samplerate', h['audio_rate']
     }
   end
 
   alias_method('application_x_flash_video', 'video')
+
+  def video_x_ms_wmv(fname, charset)
+    h = video(fname, charset)
+    wma = audio_x_ms_wma(fname, charset)
+    %w(
+      Bitrate Artist Title Album Genre ReleaseDate TrackNo VariableBitrate
+    ).each{|t|
+      h['Video.'+t] = wma['Audio.'+t]
+    }
+    %w(Samplerate).each{|t|
+      h['Audio.'+t] = wma['Audio.'+t]
+    }
+    h
+  end
+  alias_method('video_x_ms_asf', 'video_x_ms_wmv')
 
   def image(fname, charset)
     begin
