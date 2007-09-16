@@ -23,29 +23,33 @@ if filenames.empty?
 end
 
 filenames.each do |fn|
-  if options[:extract]
-    f2n = fn.sub(/\.mhd$/, '')
-    File.open(fn,'rb'){|f|
-      mdh_sz = f.read(4).unpack("N")[0]
-      if options[:print]
-      	STDOUT.write(f.read(mdh_sz))
-      else
-        f.seek(4+mdh_sz)
-        File.open(f2n, 'w'){|f2|
-          f2.write(f.read(1048576)) until f.eof?
-        }
-      end
-    }
-  elsif options[:print]
-    STDOUT.write(fn.to_pn.metadata.to_yaml)
-  else
-    File.open(fn+'.mhd','wb'){|f|
-      d = fn.to_pn.metadata.to_yaml
-      f.write( [d.size].pack("N") )
-      f.write(d)
-      File.open(fn, 'rb'){|f2|
-        f.write(f2.read(1048576)) until f2.eof?
+  if File.exist?(fn)
+    if options[:extract]
+      f2n = fn.sub(/\.mhd$/, '')
+      File.open(fn,'rb'){|f|
+        mdh_sz = f.read(4).unpack("N")[0]
+        if options[:print]
+          STDOUT.write(f.read(mdh_sz))
+        else
+          f.seek(4+mdh_sz)
+          File.open(f2n, 'w'){|f2|
+            f2.write(f.read(1048576)) until f.eof?
+          }
+        end
       }
-    }
+    elsif options[:print]
+      STDOUT.write(fn.to_pn.metadata.to_yaml)
+    else
+      File.open(fn+'.mhd','wb'){|f|
+        d = fn.to_pn.metadata.to_yaml
+        f.write( [d.size].pack("N") )
+        f.write(d)
+        File.open(fn, 'rb'){|f2|
+          f.write(f2.read(1048576)) until f2.eof?
+        }
+      }
+    end
+  elsif not Metadata.quiet
+    STDERR.puts("File does not exist: #{fn}")
   end
 end
