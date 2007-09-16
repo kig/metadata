@@ -30,6 +30,9 @@ Usage
 
   # strip out metadata header from mdh file and save it to myfile.jpg
   mdh -e myfile.jpg.mdh
+
+  # print out list of flags
+  mdh -h
   
 irb> Metadata.extract('myfile.jpg')
 irb> Metadata.extract_text('myfile.jpg')
@@ -40,14 +43,15 @@ List of supported formats
 -------------------------
 
   Audio:
+    Whatever you manage to make mplayer play.
+    Plus FLAC, m4a and wma handled specially.
     Successfully tested with:
       mp3, flac, ogg, wav
     Should also work:
       wma, m4a
 
   Video:
-    What you manage to make mplayer play, which can be just about anything.
-    Then again, missing title and author data, etc. (do videos even have those?)
+    Whatever you manage to make mplayer play.
     Successfully tested with:
       wmv, mov, divx, xvid, flv, ogm, mpg
 
@@ -80,6 +84,7 @@ Requirements
       flacinfo-rb
       wmainfo-rb
       MP4info
+      id3lib
     list of debian packages:
       dcraw
       libimlib2-ruby
@@ -94,8 +99,7 @@ Requirements
       antiword
       catdoc
       shared-mime-info
-      vorbis-tools
-      
+
   * You do want to install the latest versions of dcraw and 
     shared-mime-info to be able to handle camera raw images.
     http://cybercom.net/~dcoffin/dcraw/

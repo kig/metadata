@@ -7,8 +7,8 @@ require 'flacinfo'
 require 'wmainfo'
 require 'mp4info'
 require 'imlib2'
+require 'id3lib'
 
-require 'metadata/mp3info'
 require 'metadata/mime_info'
 require 'iconv'
 require 'time'
@@ -75,7 +75,7 @@ class String
 
   def to_utf8(charset=nil)
     us = nil
-    charsets = [charset, 'utf-8',
+    charsets = [charset, 'utf-8', 'utf-16', 'utf-32',
       chardet,
       'shift-jis','euc-jp','iso8859-1','cp1252','big-5'].compact
     charsets.find{|c|
@@ -188,25 +188,7 @@ extend self
   alias_method :[], 'extract'
 
 
-
-
-  def audio_mpeg(fn, charset)
-    Mp3Info.open(fn) do |m|
-      t = m.tag
-      md = {
-        'Audio.Title' => enc_utf8(t['title'], charset),
-        'Audio.Artist' => enc_utf8(t['artist'], charset),
-        'Audio.Album' => enc_utf8(t['album'], charset),
-        'Audio.Bitrate' => m.bitrate.to_f,
-        'Audio.Duration' => m.length.to_f,
-        'Audio.Samplerate' => m.samplerate.to_i,
-        'Audio.VariableBitrate' => m.vbr,
-        'Audio.Genre' => enc_utf8(t['genre_s'], charset),
-        'Audio.ReleaseDate' => parse_time(t['year']),
-        'Audio.TrackNo' => parse_num(t['tracknum'], :i)
-      }
-    end
-  end
+  
 
   def audio_x_flac(fn, charset)
     m = FlacInfo.new(fn)
@@ -217,6 +199,7 @@ extend self
       'Audio.Title' => enc_utf8(t['TITLE'], charset),
       'Audio.Artist' => enc_utf8(t['ARTIST'], charset),
       'Audio.Album' => enc_utf8(t['ALBUM'], charset),
+      'Audio.Comment' => enc_utf8(t['COMMENT'], charset),
       'Audio.Bitrate' => File.size(fn)*8 / len,
       'Audio.Duration' => len,
       'Audio.Samplerate' => si["samplerate"],
@@ -226,6 +209,9 @@ extend self
       'Audio.TrackNo' => parse_num(t['TRACKNUMBER'], :i),
       'Audio.Channels' => si["channels"]
     }
+    ad = (audio(fn, charset) rescue {})
+    ad.delete_if{|k,v| v.nil? }
+    md.merge(ad)
   end
 
   def audio_mp4(fn, charset)
@@ -265,49 +251,6 @@ extend self
       'Audio.TrackNo' => parse_num(t['TrackNumber'], :i),
       'Audio.Copyright' => enc_utf8(t['Copyright'], charset),
       'Audio.VariableBitrate' => (si['IsVBR'] == 1)
-    }
-  end
-
-  def audio_x_vorbis_ogg(fn, charset)
-    ogginfo = secure_filename(fn){|tfn| `ogginfo #{tfn}` }.strip.split("\n")
-    t = ogginfo.grep(/^.+[:=]/i).map{|line|
-      k,v = line.strip.split(/[=:]/, 2)
-      [k.downcase, v.strip]
-    }.to_hash
-    len = t['playback length'].split(":").inject(0){|s, ts|
-      s + case ts[-1,1]
-          when 'h'
-            3600 * ts.to_f
-          when 'm'
-            60 * ts.to_f
-          else
-            ts.to_f
-          end
-    }
-    md = {
-      'Audio.Title' => enc_utf8(t['title'], charset),
-      'Audio.Artist' => enc_utf8(t['artist'], charset),
-      'Audio.Album' => enc_utf8(t['album'], charset),
-      'Audio.Bitrate' => parse_num(t['nominal bitrate'], :f),
-      'Audio.Samplerate' => parse_num(t['rate'], :i),
-      'Audio.Duration' => len,
-      'Audio.Genre' => enc_utf8(t['genre'], charset),
-      'Audio.ReleaseDate' => parse_time(t['date']),
-      'Audio.TrackNo' => parse_num(t['tracknumber'], :i),
-      'Audio.Channels' => parse_num(t["channels"], :i),
-      'Audio.Comment' => enc_utf8(t['comment'], charset)
-    }
-  end
-
-  def audio_x_wav(fn, charset)
-    h = secure_filename(filename){|tfn|
-      `extract #{tfn}`
-    }.strip.split("\n").map{|s| s.split(" - ",2) }.to_hash
-    dur, rate, chans = h['format'].split(", ")
-    md = {
-      'Audio.Samplerate' => parse_num(rate, :i),
-      'Audio.Duration' => parse_num(dur, :f) / 1000,
-      'Audio.Channels' => (chans == 'stereo' ? 2 : 1)
     }
   end
 
@@ -363,7 +306,31 @@ extend self
     }
   end
 
+  def audio(filename, charset)
+    id3 = (id3lib_extract(filename, charset) rescue {})
+    h = mplayer_extract_info(filename)
+    info = {
+      'Audio.Duration', (h['length'].to_i > 0) ? h['length'] : nil,
+      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != 0 ?
+                       h['audio_bitrate'] / 1000.0 : nil,
+      'Audio.Codec', h['audio_format'].to_s,
+      'Audio.Samplerate', h['audio_rate'],
+      'Audio.Channels', h['audio_nch'],
+      
+      'Audio.Title', enc_utf8(h['Title'], charset),
+      'Audio.Artist', enc_utf8(h['Artist'], charset),
+      'Audio.Album', enc_utf8(h['Album'], charset),
+      'Audio.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
+      'Audio.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
+      'Audio.TrackNo', h['Track'],
+      'Audio.Genre', enc_utf8(h['Genre'], charset)
+    }
+    id3.delete_if{|k,v| v.nil? }
+    info.merge(id3)
+  end
+  
   def video(filename, charset)
+    id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
       'Image.Width', h['video_width'],
@@ -377,8 +344,19 @@ extend self
       'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != 0 ?
                        h['audio_bitrate'] / 1000.0 : nil,
       'Audio.Codec', h['audio_format'].to_s,
-      'Audio.Samplerate', h['audio_rate']
+      'Audio.Samplerate', h['audio_rate'],
+      'Audio.Channels', h['audio_nch'],
+      
+      'Video.Title', enc_utf8(h['Title'], charset),
+      'Video.Artist', enc_utf8(h['Artist'], charset),
+      'Video.Album', enc_utf8(h['Album'], charset),
+      'Video.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
+      'Video.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
+      'Video.TrackNo', h['Track'],
+      'Video.Genre', enc_utf8(h['Genre'], charset)
     }
+    id3.delete_if{|k,v| v.nil? }
+    info.merge(id3)
   end
   alias_method('application_x_flash_video', 'video')
 
@@ -610,7 +588,13 @@ extend self
       v = parse_val(v)
       [k,v]
     }
-    Hash[*ids.flatten]
+    hash = Hash[*ids.flatten]
+    hash.each{|k,v|
+      if k =~ /^clip_info_name/
+        hash[v] = hash[k.sub("name", "value")]
+      end
+    }
+    hash
   end
 
   def extract_extract_info(filename)
@@ -634,6 +618,37 @@ extend self
     }
   end
 
+  def id3lib_extract(fn, charset)
+    t = ID3Lib::Tag.new(fn)
+    {
+      'Audio.Title' => enc_utf8(t.title, charset),
+      'Audio.Subtitle' => enc_utf8(t.subtitle, charset),
+
+      'Audio.Artist' => enc_utf8(t.artist, charset),
+      'Audio.Band' => enc_utf8(t.band, charset),
+      'Audio.Composer' => enc_utf8(t.composer, charset),
+      'Audio.Performer' => enc_utf8(t.performer, charset),
+      'Audio.Conductor' => enc_utf8(t.conductor, charset),
+      'Audio.Lyricist' => enc_utf8(t.lyricist, charset),
+      'Audio.RemixedBy' => enc_utf8(t.remixed_by, charset),
+      'Audio.InterpretedBy' => enc_utf8(t.interpreted_by, charset),
+
+      'Audio.Genre' => enc_utf8(t.genre, charset),
+      'Audio.Grouping' => enc_utf8(t.grouping, charset),
+
+      'Audio.Album' => enc_utf8(t.album, charset),
+      'Audio.Publisher' => enc_utf8(t.publisher, charset),
+      'Audio.ReleaseDate' => parse_time(enc_utf8(t.date || t.year, charset)),
+      'Audio.DiscNo' => parse_num(enc_utf8(t.disc, charset), :i),
+      'Audio.TrackNo' => parse_num(enc_utf8(t.track, charset), :i),
+
+      'Audio.Tempo' => parse_num(enc_utf8(t.bpm, charset), :i),
+      'Audio.Comment' => enc_utf8(t.comment, charset),
+      'Audio.Lyrics' => enc_utf8(t.lyrics, charset),
+      'Audio.Image' => t.find_all{|f| f[:id] == :APIC }.map{|f| f[:data] }[0]
+    }
+  end
+  
   def extract_exif(filename, charset=nil)
     exif = {}
     raw_exif = secure_filename(filename){|tfn|

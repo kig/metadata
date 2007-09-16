@@ -85,7 +85,9 @@ public
     brv = text_or_binary(filename)
     rv = (nrv || lmrv || brv)
     if File.exist?(filename)
-      ft = `file -ib #{filename.dump}`.strip
+      ft = Metadata.secure_filename(filename){|tfn|
+        `file -ib #{tfn}`.strip
+      }
       # if ft and nrv disagree, use lmrv || nrv || ft
       if nrv and ft != nrv
         if generic_type?(lmrv)
