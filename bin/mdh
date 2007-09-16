@@ -8,8 +8,10 @@ opts = OptionParser.new do |opts|
   opts.banner = "#{$0} [options] filename [filename ...]"
 
   opts.separator ""
-  opts.on("-e", "Extract file"){|p| options[:extract] = true }
-  opts.on("-p", "Only print out metadata"){|p| options[:print] = true }
+  opts.on("-e", "Extract mdh file"){|p| options[:extract] = true }
+  opts.on("-p", "Print metadata to stdout"){|p| options[:print] = true }
+  opts.on("-v", "Verbose output to stderr"){|p| Metadata.verbose = true }
+  opts.on("-q", "Quiet mode, no error messages"){|p| Metadata.quiet = true }
 end
 
 opts.parse!(ARGV)

@@ -112,6 +112,7 @@ public
     image/tiff
     video/x-theora+ogg
     audio/x-vorbis+ogg
+    audio/mpeg
   )
 
   def generic_type?(t)

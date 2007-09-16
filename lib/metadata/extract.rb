@@ -116,6 +116,8 @@ end
 module Metadata
 extend self
 
+  attr_accessor :quiet, :verbose
+
   # Extracts metadata from a file by guessing mimetype and calling matching
   # extractor methods (which mostly call external programs to do their bidding.)
   #
@@ -131,19 +133,25 @@ extend self
     mt = mts.shift
     rv = nil
     new_methods = public_methods(false)
-    while mt.is_a?(Mimetype)
+    STDERR.puts "Processing #{filename}", " Metadata extraction" if verbose
+    while mt.is_a?(Mimetype) and mt != Mimetype
+      STDERR.puts "  Trying #{mt}" if verbose
       mn = mt.to_s.gsub(/[^a-z0-9]/i,"_")
       if new_methods.include?( mn )
         begin
           rv = __send__( mn, filename, charset )
+          STDERR.puts "  OK" if verbose
           break
         rescue => e
-          STDERR.puts e, e.message, e.backtrace
+          STDERR.puts(e, e.message, e.backtrace) unless quiet
         end
       end
       mt = mts.shift
     end
-    rv ||= extract_extract_info(filename)
+    unless rv
+      STDERR.puts "  Falling back to extract" if verbose
+      rv = extract_extract_info(filename)
+    end
     rv['File.Format'] = mimetype.to_s
     rv['File.Size'] = File.size(filename.to_s)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false)
@@ -155,19 +163,25 @@ extend self
   def extract_text(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil, layout=false)
     filename = filename.to_s
     mimetype = Mimetype[mimetype] unless mimetype.is_a?( Mimetype )
-    mt = mimetype
+    mts = mimetype.ancestors
+    mt = mts.shift
     new_methods = public_methods(false)
-    while mt.is_a?(Mimetype)
+    STDERR.puts " Text extraction" if verbose
+    while mt.is_a?(Mimetype) and mt != Mimetype
+      STDERR.puts "  Trying #{mt}" if verbose
       mn = mt.to_s.gsub(/[^a-z0-9]/i,"_") + "__gettext"
       if new_methods.include?( mn )
         begin
-          return __send__( mn, filename, charset, layout )
+          rv = __send__( mn, filename, charset, layout )
+          STDERR.puts "  OK" if verbose
+          return rv
         rescue => e
-          STDERR.puts e, e.message, e.backtrace
+          STDERR.puts(e, e.message, e.backtrace) unless quiet
         end
       end
-      mt = mt.ancestors[1]
+      mt = mts.shift
     end
+    STDERR.puts "  Text extraction failed" if verbose
     nil
   end
 
@@ -255,7 +269,7 @@ extend self
   end
 
   def audio_x_vorbis_ogg(fn, charset)
-    ogginfo = `ogginfo '#{fn.gsub("'", "\\\\'")}'`.strip.split("\n")
+    ogginfo = secure_filename(fn){|tfn| `ogginfo #{tfn}` }.strip.split("\n")
     t = ogginfo.grep(/^.+[:=]/i).map{|line|
       k,v = line.strip.split(/[=:]/, 2)
       [k.downcase, v.strip]
@@ -286,7 +300,9 @@ extend self
   end
 
   def audio_x_wav(fn, charset)
-    h = `extract #{fn.dump}`.strip.split("\n").map{|s| s.split(" - ",2) }.to_hash
+    h = secure_filename(filename){|tfn|
+      `extract #{tfn}`
+    }.strip.split("\n").map{|s| s.split(" - ",2) }.to_hash
     dur, rate, chans = h['format'].split(", ")
     md = {
       'Audio.Samplerate' => parse_num(rate, :i),
@@ -295,10 +311,13 @@ extend self
     }
   end
 
-  def application_pdf(fname, charset)
-    h = pdfinfo_extract_info(fname)
-    charset = `pdftotext #{fname.dump} - | head -c 65536`.chardet
-    h['words'] = `pdftotext #{fname.dump} - | wc -w 2>/dev/null`.strip.to_i
+  def application_pdf(filename, charset)
+    h = pdfinfo_extract_info(filename)
+    charset = nil
+    secure_filename(filename){|tfn|
+      charset = `pdftotext #{tfn} - | head -c 65536`.chardet
+      h['words'] = `pdftotext #{tfn} - | wc -w 2>/dev/null`.strip.to_i
+    }
     {
       'Doc.Title', enc_utf8(h['title'], charset),
       'Doc.Author', enc_utf8(h['author'], charset),
@@ -324,26 +343,28 @@ extend self
   end
   alias_method :application_x_gzpostscript, :application_postscript
 
-  def text_html(fname, charset)
-    words = `html2text #{fname.dump} | wc -w 2>/dev/null`.strip.to_i
-    charset = (File.read(fname, 65536) || "").chardet
+  def text_html(filename, charset)
+    words = secure_filename(filename){|tfn|
+      `html2text #{tfn} | wc -w 2>/dev/null`
+    }.strip.to_i
+    charset = (File.read(filename, 65536) || "").chardet
     {
       'Doc.WordCount' => words,
       'Doc.Charset' => charset
     }
   end
 
-  def text(fname, charset)
-    words = `wc -w #{fname.dump} 2>/dev/null`.strip.to_i
-    charset = (File.read(fname, 65536) || "").chardet
+  def text(filename, charset)
+    words = secure_filename(filename){|tfn| `wc -w #{tfn} 2>/dev/null` }.strip.to_i
+    charset = (File.read(filename, 65536) || "").chardet
     {
       'Doc.WordCount' => words,
       'Doc.Charset' => charset
     }
   end
 
-  def video(fname, charset)
-    h = mplayer_extract_info(fname)
+  def video(filename, charset)
+    h = mplayer_extract_info(filename)
     info = {
       'Image.Width', h['video_width'],
       'Image.Height', h['video_height'],
@@ -361,9 +382,9 @@ extend self
   end
   alias_method('application_x_flash_video', 'video')
 
-  def video_x_theora_ogg(fname, charset)
-    h = video(fname, charset)
-    wma = audio_x_vorbis_ogg(fname, charset)
+  def video_x_theora_ogg(filename, charset)
+    h = video(filename, charset)
+    wma = audio_x_vorbis_ogg(filename, charset)
     %w(
       Artist Title Album Genre ReleaseDate TrackNo VariableBitrate
     ).each{|t|
@@ -372,9 +393,9 @@ extend self
     h
   end
 
-  def video_x_ms_wmv(fname, charset)
-    h = video(fname, charset)
-    wma = audio_x_ms_wma(fname, charset)
+  def video_x_ms_wmv(filename, charset)
+    h = video(filename, charset)
+    wma = audio_x_ms_wma(filename, charset)
     %w(
       Bitrate Artist Title Album Genre ReleaseDate TrackNo VariableBitrate
     ).each{|t|
@@ -387,18 +408,18 @@ extend self
   end
   alias_method('video_x_ms_asf', 'video_x_ms_wmv')
 
-  def image(fname, charset)
+  def image(filename, charset)
     begin
-      img = Imlib2::Image.load(fname.to_s)
+      img = Imlib2::Image.load(filename.to_s)
       w = img.width
       h = img.height
       id_out = ""
       img.delete!
     rescue Exception
-      id_out = `identify #{fname.dump}`
+      id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
       w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
     end
-    exif = extract_exif(fname, charset)
+    exif = extract_exif(filename, charset)
     info = {
       'Image.Width' => parse_val(w),
       'Image.Height' => parse_val(h),
@@ -408,9 +429,9 @@ extend self
     info
   end
 
-  def image_x_dcraw(fname, charset)
-    exif = extract_exif(fname, charset)
-    dcraw = extract_dcraw(fname)
+  def image_x_dcraw(filename, charset)
+    exif = extract_exif(filename, charset)
+    dcraw = extract_dcraw(filename)
     w, h = dcraw["Output size"].split("x",2).map{|s| s.strip }
     info = {
       'Image.Width' => parse_val(w),
@@ -426,12 +447,12 @@ extend self
   end
 
   def text_html__gettext(filename, charset, layout=false)
-    enc_utf8(`unhtml #{filename.dump}`, charset)
+    enc_utf8(secure_filename(filename){|tfn| `unhtml #{tfn}` }, charset)
   end
 
   def application_pdf__gettext(filename, charset, layout=false)
     page = 0
-    str = `pdftotext #{layout ? "-layout " : ""}-enc UTF-8 #{filename.dump} -`
+    str = secure_filename(filename){|tfn| `pdftotext #{layout ? "-layout " : ""}-enc UTF-8 #{tfn} -` }
     if layout
       str.gsub!(/\f/u, "\f\n")
       str.gsub!(/^/u, " ")
@@ -446,7 +467,7 @@ extend self
   
   def application_postscript__gettext(filename, charset, layout=false)
     page = 0
-    str = `pstotext #{filename.dump}`
+    str = secure_filename(filename){|tfn| `pstotext #{tfn}` }
     if layout
       str.gsub!(/\f/u, "\f\n")
       str.gsub!(/^/u, " ")
@@ -461,7 +482,7 @@ extend self
 
   def application_x_gzpostscript__gettext(filename, charset, layout=false)
     page = 0
-    str = `zcat #{filename.dump} | pstotext -`
+    str = secure_filename(filename){|tfn| `zcat #{tfn} | pstotext -` }
     if layout
       str.gsub!(/\f/u, "\f\n")
       str.gsub!(/^/u, " ")
@@ -475,19 +496,19 @@ extend self
   end
   
   def application_msword__gettext(filename, charset, layout=false)
-    enc_utf8(`antiword #{filename.dump}`, charset)
+    enc_utf8(`antiword #{escape_filename(filename)}`, charset)
   end
   
   def application_rtf__gettext(filename, charset, layout=false)
-    enc_utf8(`catdoc #{filename.dump}`, charset)
+    enc_utf8(`catdoc #{escape_filename(filename)}`, charset)
   end
   
   def application_vnd_ms_powerpoint__gettext(filename, charset, layout=false)
-    enc_utf8(`catppt #{filename.dump}`, charset)
+    enc_utf8(`catppt #{escape_filename(filename)}`, charset)
   end
 
   def application_vnd_ms_excel__gettext(filename, charset, layout=false)
-    enc_utf8(`xls2csv -d UTF-8 #{filename.dump}`, charset)
+    enc_utf8(`xls2csv -d UTF-8 #{escape_filename(filename)}`, charset)
   end
 
   
@@ -574,12 +595,12 @@ extend self
     end
   }
   
-  def mplayer_extract_info(fname)
+  def mplayer_extract_info(filename)
     mplayer = `which mplayer32`.strip
     mplayer = `which mplayer`.strip if mplayer.empty?
     mplayer = "mplayer" if mplayer.empty?
     output = IO.popen("#{mplayer.dump} -quiet -identify -vo null -ao null -frames 0 -playlist - 2>/dev/null", "r+"){|mp|
-      mp.puts fname
+      mp.puts filename
       mp.close_write
       mp.read
     }
@@ -592,12 +613,15 @@ extend self
     Hash[*ids.flatten]
   end
 
-  def extract_extract_info(fname)
-    arr = `extract #{fname.dump}`.strip.split("\n").map{|s| s.split(" - ",2) }
+  def extract_extract_info(filename)
+    arr = secure_filename(filename){|tfn| `extract #{tfn}` }.strip.split("\n").map{|s| s.split(" - ",2) }
     h = arr.to_hash
     filenames = arr.find_all{|k,v| k == 'filename' }.map{|k,v| enc_utf8(v, nil) }
     {
       'Doc.Title', enc_utf8(h['title'], nil),
+      'Doc.Genre', enc_utf8(h['genre'], nil),
+      'Doc.Album', enc_utf8(h['album'], nil),
+      'Doc.Artist', enc_utf8(h['artist'], nil),
       'Doc.Language', enc_utf8(h['language'], nil),
       'Doc.Subject', enc_utf8(h['subject'], nil),
       'Doc.Author', enc_utf8(h['creator'], nil),
@@ -605,14 +629,16 @@ extend self
       'Doc.Modified', parse_time(h['modification date']),
       'Doc.Description', enc_utf8(h['description'], nil),
       'File.Software', enc_utf8(h['software'], nil),
-      'Archive.Contents', filenames,
+      'Archive.Contents', filenames.empty? ? nil : filenames,
       'Doc.WordCount', parse_num(h['word count'], :i)
     }
   end
 
-  def extract_exif(fname, charset=nil)
+  def extract_exif(filename, charset=nil)
     exif = {}
-    raw_exif = `exiftool -s -t -d "%Y:%m:%dT%H:%M:%S%Z" #{fname.dump}`.split("\n", 8).last
+    raw_exif = secure_filename(filename){|tfn|
+      `exiftool -s -t -d "%Y:%m:%dT%H:%M:%S%Z" #{tfn}`
+    }.split("\n", 8).last
     raw_exif.strip.split("\n").each do |t|
       k,v = t.split("\t", 2)
       exif[k] = v
@@ -659,17 +685,19 @@ extend self
     info
   end
 
-  def extract_dcraw(fname)
+  def extract_dcraw(filename)
     h = {}
-    `dcraw -i -v #{fname.dump}`.strip.split("\n").each do |t|
+    secure_filename(filename){|tfn| `dcraw -i -v #{tfn}` }.strip.split("\n").
+    each do |t|
       k,v = t.split(/:\s*/, 2)
       h[k] = v
     end
     h
   end
 
-  def pdfinfo_extract_info(fname)
-    ids = `pdfinfo #{fname.dump}`.strip.split("\n").map{|r|
+  def pdfinfo_extract_info(filename)
+    ids = secure_filename(filename){|tfn| `pdfinfo #{tfn}` }.strip.split("\n").
+    map{|r|
       k,v = r.split(":",2)
       k = k.downcase
       v = parse_val(v.strip)
@@ -688,6 +716,24 @@ extend self
     i
   end
 
+
+  # Create a link to `filename' with a secure filename and yield it.
+  # Unlinks secure filename after yield returns.
+  #
+  # This is needed because of filenames like "-h".
+  #
+  def secure_filename(filename)
+    tfn = (temp_filename + (File.extname(filename) || "")).
+          gsub(/[^a-z0-9_.]/i, '_') # PAA RAA NOO IAA
+    FileUtils.ln(filename, tfn)
+    yield(tfn)
+  ensure
+    File.unlink(tfn) if tfn
+  end
+
+  def temp_filename
+    "/tmp/metadata_temp_#{Process.pid}_#{Thread.current.object_id}_#{Time.now.to_f}"
+  end
 
   def parse_val(v)
     case v
