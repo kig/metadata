@@ -726,17 +726,30 @@ extend self
   #
   # This is needed because of filenames like "-h".
   #
+  # If the filename doesn't begin with a dash, passes it in
+  # double-quotes with double-quotes and dollar signs in 
+  # filename escaped.
+  #
   def secure_filename(filename)
-    tfn = (temp_filename + (File.extname(filename) || "")).
-          gsub(/[^a-z0-9_.]/i, '_') # PAA RAA NOO IAA
-    FileUtils.ln(filename, tfn)
-    yield(tfn)
+    if filename =~ /^-/
+      dirname = File.dirname(File.expand_path(filename))
+      tfn = "/tmp/" + temp_filename + (File.extname(filename) || "").
+            gsub(/[^a-z0-9_.]/i, '_') # PAA RAA NOO IAA
+      begin
+        FileUtils.ln(filename, tfn)
+      rescue
+        FileUtils.cp(filename, tfn) # different fs for /tmp
+      end
+      yield(tfn)
+    else # trust the filename to not blow up in our face
+      yield(%Q("#{filename.gsub(/[$"]/, "\\\\\\0")}"))
+    end
   ensure
-    File.unlink(tfn) if tfn
+    File.unlink(tfn) if tfn and File.exist?(tfn)
   end
 
   def temp_filename
-    "/tmp/metadata_temp_#{Process.pid}_#{Thread.current.object_id}_#{Time.now.to_f}"
+    "metadata_temp_#{Process.pid}_#{Thread.current.object_id}_#{Time.now.to_f}"
   end
 
   def parse_val(v)
