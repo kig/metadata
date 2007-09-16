@@ -84,7 +84,7 @@ Requirements
       flacinfo-rb
       wmainfo-rb
       MP4info
-      id3lib
+      id3lib-ruby
     list of debian packages:
       dcraw
       libimlib2-ruby
