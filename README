@@ -1,3 +1,10 @@
+Thanks
+------
+
+  Konrad Meyer for his patient testing and bug reports.
+  Darren Kirby for the heads-up on wmainfo's ASF-parsing capabilities.
+
+
 Description
 -----------
 
@@ -107,6 +114,7 @@ Requirements
     
   * Python + chardet library
     http://chardet.feedparser.org/
+
 
 Install
 -------
