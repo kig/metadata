@@ -317,7 +317,7 @@ extend self
       'Audio.Samplerate', h['audio_rate'],
       'Audio.Channels', h['audio_nch'],
       
-      'Audio.Title', enc_utf8(h['Title'], charset),
+      'Audio.Title', enc_utf8(h['Title'] || h['Name'], charset),
       'Audio.Artist', enc_utf8(h['Artist'], charset),
       'Audio.Album', enc_utf8(h['Album'], charset),
       'Audio.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
@@ -347,7 +347,7 @@ extend self
       'Audio.Samplerate', h['audio_rate'],
       'Audio.Channels', h['audio_nch'],
       
-      'Video.Title', enc_utf8(h['Title'], charset),
+      'Video.Title', enc_utf8(h['Title'] || h['Name'], charset),
       'Video.Artist', enc_utf8(h['Artist'], charset),
       'Video.Album', enc_utf8(h['Album'], charset),
       'Video.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
