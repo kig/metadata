@@ -1,0 +1,784 @@
+File.Name
+  
+
+string
+  
+
+No
+  
+
+File name excluding path but including the file extension
+
+File.Path
+  
+
+string
+  
+
+No
+  
+
+full file path of file excluding the filename
+
+File.Link
+  
+
+string
+  
+
+No
+  
+
+Uri of link target
+
+File.Format
+  
+
+string
+  
+
+No
+  
+
+Mime type of the file or if a directory it should contain value "Folder"
+
+File.Size
+  
+
+uint64
+  
+
+No
+  
+
+size of the file in bytes or if a directory no. of items it contains
+
+File.Permissions
+  
+
+string
+  
+
+No
+  
+
+Permission string in unix format eg "-rw-r--r--"
+
+File.Publisher
+  
+
+string
+  
+
+Yes
+  
+
+Editable DC type for the name of the publisher of the file (EG dc:publisher field in RSS feed)
+
+File.Content
+  
+
+string
+  
+
+No
+  
+
+File's contents filtered as plain text (IE as stored by the indexer)
+
+File.Description
+  
+
+string
+  
+
+Yes
+  
+
+Editable free text/notes
+
+File.Keywords 
+  
+
+array of string
+  
+
+Yes
+  
+
+Editable array of keywords
+
+File.Rank 
+  
+
+integer
+  
+
+Yes
+  
+
+Editable file rank for grading favourites. Value should be in the range 1..10
+
+File.IconPath 
+  
+
+string
+  
+
+Yes
+  
+
+Editable file uri for a custom icon for the file
+
+File.SmallThumbnailPath
+  
+
+string
+  
+
+Yes
+  
+
+Editable file uri for a small thumbnail of the file suitable for use in icon views
+
+File.LargeThumbnailPath
+  
+
+string
+  
+
+Yes
+  
+
+Editable file uri for a larger thumbnail of the file suitable for previews
+
+File.Modified 
+  
+
+datetime
+  
+
+No
+  
+
+Last modified datetime
+
+File.Accessed 
+  
+
+datetime
+  
+
+No
+  
+
+Last access datetime
+
+Audio Metadata
+
+Audio metadata is based on the widespread ID3.1 tags embedded in mp3, ogg and similar files. These are already defined in that specification. All metadata in this section is prefixed with "Audio" and it is recommended that any other metadata not listed below also uses this prefix if its audio related (unless it is application specific).
+
+Name
+  
+
+Type
+  
+
+Writable
+  
+
+Description
+
+Audio.Title 
+  
+
+string
+  
+
+No
+  
+
+title of the track
+
+Audio.Artist
+  
+
+string
+  
+
+No
+  
+
+artist of the track
+
+Audio.Album 
+  
+
+string
+  
+
+No
+  
+
+name of the album
+
+Audio.AlbumArtist
+  
+
+string
+  
+
+No
+  
+
+artist of the album
+
+Audio.AlbumTrackCount
+  
+
+integer
+  
+
+No
+  
+
+total no. of tracks on the album
+
+Audio.TrackNo
+  
+
+integer
+  
+
+No
+  
+
+position of track on the album
+
+Audio.DiscNo
+  
+
+integer
+  
+
+No
+  
+
+specifies which disc the track is on
+
+Audio.Performer
+  
+
+string
+  
+
+No
+  
+
+Name of the performer/conductor of the music
+
+Audio.TrackGain
+  
+
+float
+  
+
+No
+  
+
+gain adjustment of track
+
+Audio.TrackPeakGain
+  
+
+float
+  
+
+No
+  
+
+peak gain adjustment of track
+
+Audio.AlbumGain
+  
+
+float
+  
+
+No
+  
+
+gain adjustment of album
+
+Audio.AlbumPeakGain
+  
+
+float
+  
+
+No
+  
+
+peak gain adjustment of album
+
+Audio.Duration
+  
+
+integer
+  
+
+No
+  
+
+duration of track in seconds
+
+Audio.ReleaseDate
+  
+
+Datetime
+  
+
+No
+  
+
+date track was released
+
+Audio.Comment
+  
+
+string
+  
+
+No
+  
+
+comments on the track
+
+Audio.Genre 
+  
+
+string
+  
+
+No
+  
+
+type of music classification for the track as defined in ID3 spec
+
+Audio.Codec
+  
+
+string
+  
+
+No
+  
+
+codec encoding description
+
+Audio.CodecVersion
+  
+
+string
+  
+
+No
+  
+
+codec version
+
+Audio.Samplerate
+  
+
+integer
+  
+
+No
+  
+
+samplerate in Hz
+
+Audio.Bitrate
+  
+
+float
+  
+
+No
+  
+
+bitrate in kbps
+
+Audio.Channels
+  
+
+integer
+  
+
+No
+  
+
+no. of channels in the audio (2 = stereo)
+
+Audio.LastPlay
+  
+
+datetime
+  
+
+Yes
+  
+
+when track was last played
+
+Audio.PlayCount
+  
+
+integer
+  
+
+Yes
+  
+
+No. of times the track has been played
+
+Audio.IsNew
+  
+
+integer
+  
+
+Yes
+  
+
+set to "1" if track is new to the user. (default "0")
+
+Audio.MBAlbumID
+  
+
+string
+  
+
+Yes
+  
+
+MusicBrainz album ID in UUID format
+
+Audio.MBArtistID
+  
+
+string
+  
+
+Yes
+  
+
+MusicBrainz artist ID in UUID format
+
+Audio.MBAlbumArtistID
+  
+
+string
+  
+
+Yes
+  
+
+MusicBrainz album artist ID in UUID format
+
+Audio.MBTrackID
+  
+
+string
+  
+
+Yes
+  
+
+MusicBrainz track ID in UUID format
+
+Audio.Lyrics
+  
+
+string
+  
+
+Yes
+  
+
+Lyrics of the track
+
+Audio.CoverAlbumThumbnailPath
+  
+
+string
+  
+
+Yes
+  
+
+File path to thumbnail image of the cover album
+
+Document Metadata
+
+For documents, applications have typically used a mixture of Dublin Core types and propriety types. In order to be consistent with them, we have based our metadata names likewise. We have also based these names on metadata names found in Open Office, Ms Word and PDF documents. All metadata in this section is prefixed with the "Doc" class and any other document based metadata should also have this prefix (unless it is application specific). All the metadata here is not editable through the interface as all of it is derived from the file contents.
+
+Name
+  
+
+Type
+  
+
+Description
+
+Doc.Title
+  
+
+string
+  
+
+Title of document
+
+Doc.Subject
+  
+
+string
+  
+
+document subject
+
+Doc.Author
+  
+
+string
+  
+
+name of the author
+
+Doc.Keywords
+  
+
+string
+  
+
+string of keywords
+
+Doc.Comments
+  
+
+string
+  
+
+user definable free text
+
+Doc.PageCount
+  
+
+integer
+  
+
+no. of pages in document
+
+Doc.WordCount
+  
+
+integer
+  
+
+total no. of chars in document
+
+Doc.Created 
+  
+
+datetime
+  
+
+datetime document was originally
+
+Image Metadata
+
+For images, most support the EXIF standard and so this largely makes up this specification. SVG files have user definable non-standard metadata so a subset of Dublin Core is also provided here. All metadata in this section is prefixed with the "Image" class and any other image based metadata should also have this prefix (unless it is application specific). All the metadata here is not editable through the interface as all of it is derived from the file contents.
+
+Name
+  
+
+Type
+  
+
+Description
+
+Image.Height
+  
+
+integer
+  
+
+Height in pixels
+
+Image.Width
+  
+
+integer
+  
+
+Width in pixels
+
+Image.Title
+  
+
+string
+  
+
+Title of image
+
+Image.Album
+  
+
+string
+  
+
+Name of an album the image belongs to
+
+Image.Date 
+  
+
+datetime
+  
+
+datetime image was originally created
+
+Image.Keywords
+  
+
+string
+  
+
+string of keywords
+
+Image.Creator
+  
+
+string
+  
+
+name of the author
+
+Image.Comments
+  
+
+string
+  
+
+user definable free text
+
+Image.Description
+  
+
+string
+  
+
+description of the image
+
+Image.Software
+  
+
+string
+  
+
+software used to produce/enhance the image
+
+Image.CameraMake
+  
+
+string
+  
+
+make of camera used to take the image
+
+Image.CameraModel
+  
+
+string
+  
+
+model of camera used to take the image
+
+Image.Orientation
+  
+
+string
+  
+
+represents the orientation of the image wrt camera IE "top,left" or "bottom,right"
+
+Image.ExposureProgram
+  
+
+string
+  
+
+The program used by the camera to set exposure when the picture is taken. EG Manual, Normal, Aperture priority etc
+
+Image.ExposureTime
+  
+
+float
+  
+
+Exposure time used to capture the photo in seconds
+
+Image.Fnumber
+  
+
+float
+  
+
+Diameter of the aperture relative to the effective focal length of the lens.
+
+Image.Flash
+  
+
+integer
+  
+
+Set to 1 if flash was fired
+
+Image.FocalLength
+  
+
+float
+  
+
+Focal length of lens in mm
+
+Image.ISOSpeed
+  
+
+float
+  
+
+ISO speed used to acquire the document contents. For example, 100, 200, 400, etc
+
+Image.MeteringMode
+  
+
+string
+  
+
+Metering mode used to acquire the image (IE Unknown, Average, CenterWeightedAverage, Spot, MultiSpot, Pattern, Partial)
+
+Image.WhiteBalance
+  
+
+string
+  
+
+White balance setting of the camera when the picture was taken (auto or manual)
+
+Image.Copyright
+  
+
+string
+  
+
+Embedded copyright message 

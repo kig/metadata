@@ -404,7 +404,7 @@ extend self
       'Image.Width' => parse_val(w),
       'Image.Height' => parse_val(h),
       'Image.Frames' => 1,
-      'Image.DimensionsUnit' => 'px'
+      'Image.DimensionUnit' => 'px'
     }.merge(exif)
     info
   end
@@ -672,7 +672,7 @@ extend self
     end
     if t = exif["ModifyDate"]
       info['Image.Date'] =
-      info['Image.ModifyDate'] = parse_time(t.split(":",3).join("-"))
+      info['Image.Modified'] = parse_time(t.split(":",3).join("-"))
     end
     if t = exif["DateCreated"]
       info['Image.Date'] =
