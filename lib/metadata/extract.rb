@@ -310,19 +310,19 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Audio.Duration', (h['length'].to_i > 0) ? h['length'] : nil,
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != 0 ?
-                       h['audio_bitrate'] / 1000.0 : nil,
-      'Audio.Codec', h['audio_format'].to_s,
-      'Audio.Samplerate', h['audio_rate'],
-      'Audio.Channels', h['audio_nch'],
+      'Audio.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+                       parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
+      'Audio.Codec', enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
+      'Audio.Channels', parse_num(h['audio_nch'], :i),
       
       'Audio.Title', enc_utf8(h['Title'] || h['Name'], charset),
       'Audio.Artist', enc_utf8(h['Artist'], charset),
       'Audio.Album', enc_utf8(h['Album'], charset),
-      'Audio.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
+      'Audio.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
       'Audio.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Audio.TrackNo', h['Track'],
+      'Audio.TrackNo', parse_num(h['Track']),
       'Audio.Genre', enc_utf8(h['Genre'], charset)
     }
     id3.delete_if{|k,v| v.nil? }
@@ -333,26 +333,26 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Image.Width', h['video_width'],
-      'Image.Height', h['video_height'],
+      'Image.Width', parse_num(h['video_width'], :i),
+      'Image.Height', parse_num(h['video_height'], :i),
       'Image.DimensionUnit', 'px',
-      'Video.Duration', (h['length'].to_i > 0) ? h['length'] : nil,
-      'Video.Framerate', h['video_fps'],
-      'Video.Bitrate', h['video_bitrate'] && h['video_bitrate'] != 0 ?
-                       h['video_bitrate'] / 1000.0 : nil,
-      'Video.Codec', h['video_format'].to_s,
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != 0 ?
-                       h['audio_bitrate'] / 1000.0 : nil,
-      'Audio.Codec', h['audio_format'].to_s,
-      'Audio.Samplerate', h['audio_rate'],
-      'Audio.Channels', h['audio_nch'],
+      'Video.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Video.Framerate', parse_num(h['video_fps'], :f),
+      'Video.Bitrate', h['video_bitrate'] && h['video_bitrate'] != '0' ?
+                       parse_num(h['video_bitrate'], :i) / 1000.0 : nil,
+      'Video.Codec', enc_utf8(h['video_format'], charset),
+      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+                       parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
+      'Audio.Codec', enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate', parse_num(h['audio_rate']),
+      'Audio.Channels', parse_num(h['audio_nch']),
       
       'Video.Title', enc_utf8(h['Title'] || h['Name'], charset),
       'Video.Artist', enc_utf8(h['Artist'], charset),
       'Video.Album', enc_utf8(h['Album'], charset),
-      'Video.ReleaseDate', parse_time((h['Date'] || h['Creation Date'] || h['Year']).to_s),
+      'Video.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
       'Video.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Video.TrackNo', h['Track'],
+      'Video.TrackNo', parse_num(h['Track']),
       'Video.Genre', enc_utf8(h['Genre'], charset)
     }
     id3.delete_if{|k,v| v.nil? }
@@ -574,7 +574,6 @@ extend self
     ids = output.split("\n").grep(/^ID_/).map{|t|
       k,v, = t.split("=",2)
       k = k.downcase[3..-1]
-      v = parse_val(v)
       [k,v]
     }
     hash = Hash[*ids.flatten]
