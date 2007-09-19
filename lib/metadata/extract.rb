@@ -124,8 +124,10 @@ extend self
   #
   #   Metadata.extract('foo.png')
   #
-  # Mostly follows the shared-metadata-spec naming.
+  # Follows the Shared File Metadata Spec naming.
   # http://wiki.freedesktop.org/wiki/Specifications/shared-filemetadata-spec
+  # 
+  # All strings are converted to UTF-8.
   #
   def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil)
     filename = filename.to_s
@@ -161,6 +163,11 @@ extend self
     rv
   end
 
+  # Extracts text from a file by guessing mimetype and calling matching
+  # extractor methods (which mostly call external programs to do their bidding.)
+  #
+  # The extracted text is converted to UTF-8.
+  #
   def extract_text(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil, layout=false)
     filename = filename.to_s
     mimetype = Mimetype[mimetype] unless mimetype.is_a?( Mimetype )

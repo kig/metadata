@@ -10,8 +10,13 @@ opts = OptionParser.new do |opts|
   opts.separator ""
   opts.on("-e", "Extract mdh file"){|p| options[:extract] = true }
   opts.on("-p", "Print metadata to stdout"){|p| options[:print] = true }
+  opts.on("-c", "Create mdh file"){|p| options[:create] = true }
   opts.on("-v", "Verbose output to stderr"){|p| Metadata.verbose = true }
   opts.on("-q", "Quiet mode, no error messages"){|p| Metadata.quiet = true }
+  opts.on("-V", "Print out version number and exit"){|p|
+    puts Metadata::VERSION
+    exit!(0)
+  }
 end
 
 opts.parse!(ARGV)
@@ -27,27 +32,39 @@ filenames.each do |fn|
     if options[:extract]
       f2n = fn.sub(/\.mhd$/, '')
       File.open(fn,'rb'){|f|
+        mdh_hd = f.read(3)
+        if mdh_hd != "MDH"
+          STDERR.puts("Not recognized as an MDH file: #{fn}") unless Metadata.quiet
+          exit!(2)
+        end
+        mdh_v = f.read(1)
+        if mdh_v != "\x01"
+          STDERR.puts("Unrecognized MDH version: #{mdh_v[0]}") unless Metadata.quiet
+          exit!(3)
+        end
         mdh_sz = f.read(4).unpack("N")[0]
         if options[:print]
           STDOUT.write(f.read(mdh_sz))
         else
           f.seek(4+mdh_sz)
-          File.open(f2n, 'w'){|f2|
-            f2.write(f.read(1048576)) until f.eof?
+          File.open(f2n, 'wb'){|f2|
+            f2.write(f.read(65536)) until f.eof?
           }
         end
       }
-    elsif options[:print]
-      STDOUT.write(fn.to_pn.metadata.to_yaml)
-    else
-      File.open(fn+'.mhd','wb'){|f|
+    elsif options[:create]
+      File.open(fn+'.mdh','wb'){|f|
         d = fn.to_pn.metadata.to_yaml
+        f.write("MDH")
+        f.write("\x01")
         f.write( [d.size].pack("N") )
         f.write(d)
         File.open(fn, 'rb'){|f2|
           f.write(f2.read(1048576)) until f2.eof?
         }
       }
+    else
+      STDOUT.write(fn.to_pn.metadata.to_yaml)
     end
   elsif not Metadata.quiet
     STDERR.puts("File does not exist: #{fn}")

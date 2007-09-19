@@ -11,40 +11,42 @@ Description
 
   This package `Metadata' comes with a library called `metadata' and
   a small program called `mdh'.
-  
+
   The library probes files for their metadata (e.g. jpeg dimensions
-  and camera make, mp3 artist, pdf word count) and returns the metadata
-  as a Hash.
+  and camera make, mp3 artist, pdf text and word count) and returns the
+  metadata as a Hash. All strings in the metadata are converted to UTF-8.
 
-  Mdh can print out file metadata as YAML and package the metadata 
-  with the file.
+  The `mdh'-program can print out file metadata as YAML and package the
+  metadata with the file.
 
-  This package has many dependencies since there is no single universal 
-  metadata header format that all files use. Blame resource forks, filename
-  extensions, bags of bytes and mimetypes.
+  The metadata hash follows the shared file metadata spec naming, with some
+  additional fields, see list at the end of this file (Appendix A.)
+
+  For details on the MDH file format, see the end of this file (Appendix B.)
 
 
 Usage
 -----
 
-  # print out metadata header
-  mdh -p myfile.jpg 
+  # print out metadata for myfile.jpg
+  mdh myfile.jpg
 
-  # create myfile.jpg.mdh, which consists of metadata header + myfile.jpg
-  mdh myfile.jpg 
+  # create myfile.jpg.mdh, which consists of an MDH metadata header + myfile.jpg
+  mdh -c myfile.jpg 
 
-  # print out metadata header from mdh file
+  # print out the metadata header from an MDH file
   mdh -e -p myfile.jpg.mdh
 
-  # strip out metadata header from mdh file and save it to myfile.jpg
+  # strip out the metadata header from an MDH file and save it to myfile.jpg
   mdh -e myfile.jpg.mdh
 
-  # print out list of flags
+  # print out the list of options
   mdh -h
-  
-irb> Metadata.extract('myfile.jpg')
-irb> Metadata.extract_text('myfile.jpg')
-irb> Pathname.new("myfile.jpg").metadata
+
+  irb> require 'metadata'
+  irb> Metadata.extract('myfile.jpg')
+  irb> Metadata.extract_text('myfile.pdf')
+  irb> Pathname.new("myfile.jpg").metadata
 
 
 List of supported formats
@@ -82,19 +84,25 @@ List of supported formats
     Whatever extract spits out on the five or six bits of metadata I'm using
     from it. Archive contents at least.
 
+
 Requirements
 ------------
 
   * Ruby 1.8
   
-  * Tons of metadata extraction programs and libs,
-    list of gems:
+  * Tons of metadata extraction programs and libs.
+    This package has many dependencies since there is no single universal 
+    metadata header format that all files use. Blame resource forks, filename
+    extensions, bags of bytes and mimetypes.
+
+    List of gems:
       flacinfo-rb
       wmainfo-rb
       MP4info
       id3lib-ruby
       apetag
-    list of debian packages:
+
+    List of Debian packages:
       dcraw
       libimlib2-ruby
       extract
@@ -113,7 +121,7 @@ Requirements
     shared-mime-info to be able to handle camera raw images.
     http://cybercom.net/~dcoffin/dcraw/
     http://freedesktop.org/wiki/Software/shared-mime-info
-    
+
   * Python + chardet library
     http://chardet.feedparser.org/
 
@@ -131,6 +139,102 @@ Install
   location of Ruby libraries.  You can also install files into
   your favorite directory by supplying setup.rb some options.
   Try "ruby setup.rb --help".
+
+
+Appendix A: Additional metadata fields
+--------------------------------------
+
+  This list contains the metadata fields added to the shared
+  file metadata spec.
+
+  field name              | field type
+  ----------------------------------------------------------------------
+  Archive.Contents          array of pathnames
+
+  Audio.Band                string
+  Audio.Composer            string
+  Audio.Conductor           string
+  Audio.Copyright           string (copyright message)
+  Audio.Grouping            string
+  Audio.Image               binary string (embedded image data)
+  Audio.InterpretedBy       string
+  Audio.Lyricist            string
+  Audio.Publisher           string
+  Audio.RemixedBy           string
+  Audio.Subtitle            string
+  Audio.Tempo               integer
+  Audio.VariableBitrate     boolean
+  Audio.Writer              string
+  Audio.Publicationright    string
+  Audio.File                string
+  Audio.EAN/UPC             string
+  Audio.ISBN                string
+  Audio.Catalog             string
+  Audio.LC                  string
+  Audio.Media               string
+  Audio.Index               string
+  Audio.Related             string
+  Audio.ISRC                string
+  Audio.Abstract            string
+  Audio.Language            string
+  Audio.Bibliography        string
+  Audio.Introplay           string
+  Audio.Dummy               string
+  Audio.DebutAlbum          string
+  Audio.RecordDate          string
+  Audio.RecordLocation      string
+
+  Doc.Album                 string
+  Doc.Artist                string
+  Doc.Charset               string
+  Doc.Description           string
+  Doc.Genre                 string
+  Doc.Language              string
+  Doc.ModifyDate            date
+  Doc.PageSizeName          string (A4, A5, letter, ...)
+
+  File.Software             string (software used to create the file)
+
+  Image.DateCreated         date
+  Image.DateTimeCreated     date
+  Image.DateTimeOriginal    date
+  Image.DimensionUnit       string (px, mm, pt, ...)
+  Image.EXIF                string (exiftool output)
+  Image.Frames              integer
+  Image.Modified            date
+  Image.OriginatingProgram  string
+
+  Location.Latitude         float
+  Location.Longitude        float
+
+  Video.Album               string
+  Video.Artist              string
+  Video.Bitrate             integer
+  Video.Codec               string
+  Video.Comment             string
+  Video.Duration            float
+  Video.Framerate           float (frames per second)
+  Video.Genre               string
+  Video.ReleaseDate         date
+  Video.Title               string
+  Video.TrackNo             integer
+
+
+
+Appendix B: The MDH file format
+-------------------------------
+
+  MDH files are built as follows:
+  
+  bytes | content
+  ---------------
+    3   | "MDH"  - MDH file format identifier
+    1   | "\x01" - MDH file format version number
+    4   | Long, network byte order - the size of the metadata struct in bytes
+   var  | YAML   - The MDH metadata struct
+   var  | The actual file contents
+
+  All string fields in the metadata are UTF-8.
 
 
 License
