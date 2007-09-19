@@ -146,6 +146,7 @@ Appendix A: Additional metadata fields
 
   This list contains the metadata fields added to the shared
   file metadata spec.
+  http://wiki.freedesktop.org/wiki/Specifications/shared-filemetadata-spec
 
   field name              | field type
   ----------------------------------------------------------------------
