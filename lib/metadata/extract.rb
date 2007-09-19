@@ -11,6 +11,7 @@ require 'imlib2'
 require 'id3lib'
 
 require 'metadata/mime_info'
+require 'metadata/bt'
 require 'iconv'
 require 'time'
 require 'pathname'
@@ -433,6 +434,32 @@ extend self
     }.merge(exif)
     info
   end
+
+  def application_x_bittorrent(fn, charset)
+    h = File.read(fn).bdecode
+    charset ||= h['encoding']
+    i = h['info']
+    {
+      'Doc.Title' => i['name.utf-8'] || enc_utf8(i['name'], charset),
+      'BitTorrent.Files' =>
+        if i['files']
+          i['files'].map{|f|
+            {"path" => f['path.utf-8'] || enc_utf8(f['path'], charset),
+             "length" => f['length']}
+          }
+        else
+          nil
+        end,
+      'BitTorrent.Length' => i['length'],
+      
+      'File.Software' => enc_utf8(h['created by'], charset),
+      'Doc.Created' => parse_time(Time.at(h['creation date']).iso8601),
+      'BitTorrent.Announce' => enc_utf8(h['announce'], charset),
+      'BitTorrent.AnnounceList' => h['announce-list'],
+      'BitTorrent.Nodes' => h['nodes']
+    }
+  end
+
 
   def text__gettext(filename, charset, layout=false)
     enc_utf8((File.read(filename) || ""), charset)
