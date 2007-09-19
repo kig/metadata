@@ -6,6 +6,7 @@ end
 require 'flacinfo'
 require 'wmainfo'
 require 'mp4info'
+require 'apetag'
 require 'imlib2'
 require 'id3lib'
 
@@ -254,6 +255,23 @@ extend self
     }
   end
 
+  def audio_x_ape(fn, charset)
+    m = ApeTag.new(fn)
+    t = m.fields
+    fields = %w(Title Artist Album Comment Genre Subtitle Publisher Conductor
+       Composer Copyright Publicationright File EAN/UPC ISBN Catalog
+       LC Media Index Related ISRC Abstract Language Bibliography
+       Introplay Dummy) + ['Debut Album', 'Record Date', 'Record Location']
+    md = {
+      'Audio.ReleaseDate' => parse_time(t['Year']),
+      'Audio.TrackNo' => parse_num(t['Track'], :i)
+    }
+    fields.each{|k| md["Audio.#{k.gsub(" ", "")}"] = t[k] }
+    md
+  end
+  alias_method :audio_x_musepack, :audio_x_ape
+  alias_method :audio_x_wavepack, :audio_x_ape
+
   def application_pdf(filename, charset)
     h = pdfinfo_extract_info(filename)
     charset = nil
@@ -317,12 +335,12 @@ extend self
       'Audio.Samplerate', parse_num(h['audio_rate'], :i),
       'Audio.Channels', parse_num(h['audio_nch'], :i),
       
-      'Audio.Title', enc_utf8(h['Title'] || h['Name'], charset),
-      'Audio.Artist', enc_utf8(h['Artist'], charset),
+      'Audio.Title', enc_utf8(h['Title'] || h['Name'] || h['name'], charset),
+      'Audio.Artist', enc_utf8(h['Artist'] || h['author'], charset),
       'Audio.Album', enc_utf8(h['Album'], charset),
       'Audio.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
       'Audio.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Audio.TrackNo', parse_num(h['Track']),
+      'Audio.TrackNo', parse_num(h['Track'], :i),
       'Audio.Genre', enc_utf8(h['Genre'], charset)
     }
     id3.delete_if{|k,v| v.nil? }
@@ -344,15 +362,15 @@ extend self
       'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
                        parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
       'Audio.Codec', enc_utf8(h['audio_format'], charset),
-      'Audio.Samplerate', parse_num(h['audio_rate']),
-      'Audio.Channels', parse_num(h['audio_nch']),
+      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
+      'Audio.Channels', parse_num(h['audio_nch'], :i),
       
-      'Video.Title', enc_utf8(h['Title'] || h['Name'], charset),
-      'Video.Artist', enc_utf8(h['Artist'], charset),
+      'Video.Title', enc_utf8(h['Title'] || h['Name'] || h['name'], charset),
+      'Video.Artist', enc_utf8(h['Artist'] || h['author'], charset),
       'Video.Album', enc_utf8(h['Album'], charset),
       'Video.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
       'Video.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Video.TrackNo', parse_num(h['Track']),
+      'Video.TrackNo', parse_num(h['Track'], :i),
       'Video.Genre', enc_utf8(h['Genre'], charset)
     }
     id3.delete_if{|k,v| v.nil? }
@@ -386,7 +404,7 @@ extend self
       id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
       w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
     end
-    exif = extract_exif(filename, charset)
+    exif = (extract_exif(filename, charset) rescue {})
     info = {
       'Image.Width' => parse_val(w),
       'Image.Height' => parse_val(h),

@@ -52,21 +52,21 @@ List of supported formats
 
   Audio:
     Whatever you manage to make mplayer play.
-    Plus FLAC, m4a and wma handled specially.
+    Plus special handlers for FLAC, m4a, ape, musepack, wavepack and wma.
     Successfully tested with:
       mp3, flac, ogg, wav
     Should also work:
-      wma, m4a
+      wma, m4a, wv, mpc, ape
 
   Video:
     Whatever you manage to make mplayer play.
     Successfully tested with:
-      wmv, mov, divx, xvid, flv, ogm, mpg
+      wmv, mov, divx, xvid, flv, ogm, mpg, mkv
 
   Images:
-    Should handle pretty much anything (apart from XCF and ORF.)
+    Should handle pretty much anything (apart from ORF.)
     Successfully tested with:
-      jpeg, png, gif, nef, dng, crw, pef, psd
+      jpeg, png, gif, nef, dng, crw, pef, psd, tga, tif, xcf, xpm, ppm, bmp
 
   Documents:
     Successfully tested with:
@@ -93,6 +93,7 @@ Requirements
       wmainfo-rb
       MP4info
       id3lib-ruby
+      apetag
     list of debian packages:
       dcraw
       libimlib2-ruby
