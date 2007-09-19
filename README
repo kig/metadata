@@ -221,6 +221,12 @@ Appendix A: Additional metadata fields
   Video.Title               string
   Video.TrackNo             integer
 
+  BitTorrent.Files          array of {'path' => string, 'length' => integer}
+  BitTorrent.Length         integer (size of single-file torrents)
+  BitTorrent.Announce       string (announce url)
+  BitTorrent.AnnounceList   array of arrays of strings
+  BitTorrent.Nodes          array of [hostname, port] -arrays
+
 
 
 Appendix B: The MDH file format
