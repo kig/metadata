@@ -240,12 +240,15 @@ extend self
       'Audio.AlbumTrackCount' => parse_num(total, :i),
       'Audio.Writer' => enc_utf8(m.WRT, charset),
       'Audio.Copyright' => enc_utf8(m.CPRT, charset),
-      'Audio.Tempo' => parse_num(TMPO, :i)
+      'Audio.Tempo' => parse_num(m.TMPO, :i)
     }
   end
 
   def audio_x_ms_wma(fn, charset)
-    m = WmaInfo.new(fn)
+    # hack hack hacky workaround
+    m = WmaInfo.allocate
+    m.instance_variable_set("@ext_info", {})
+    m.__send__(:initialize, fn)
     t = m.tags
     si = m.info
     md = {
@@ -266,6 +269,7 @@ extend self
   def audio_x_ape(fn, charset)
     m = ApeTag.new(fn)
     t = m.fields
+    ad = (id3lib_extract(fn, charset) rescue {})
     fields = %w(Title Artist Album Comment Genre Subtitle Publisher Conductor
        Composer Copyright Publicationright File EAN/UPC ISBN Catalog
        LC Media Index Related ISRC Abstract Language Bibliography
@@ -275,7 +279,8 @@ extend self
       'Audio.TrackNo' => parse_num(t['Track'], :i)
     }
     fields.each{|k| md["Audio.#{k.gsub(" ", "")}"] = t[k] }
-    md
+    ad.delete_if{|k,v| v.nil? }
+    md.merge(ad)
   end
   alias_method :audio_x_musepack, :audio_x_ape
   alias_method :audio_x_wavepack, :audio_x_ape
@@ -706,8 +711,8 @@ extend self
       'Image.ExposureProgram' => enc_utf8(exif["ExposureProgram"], charset),
       'Image.ExposureTime' => enc_utf8(exif["ExposureTime"], charset),
       'Image.Copyright' => enc_utf8(exif["Copyright"] || exif["CopyrightNotice"] || exif["CopyrightURL"], charset),
-      'Image.ISOSpeed' => exif["ISO"].to_i,
-      'Image.Fnumber' => exif["FNumber"].to_f,
+      'Image.ISOSpeed' => parse_num(exif["ISO"], :i),
+      'Image.Fnumber' => parse_num(exif["FNumber"], :f),
       'Image.Flash' => enc_utf8(exif["FlashFired"], charset) == "True",
       'Image.FocalLength' => enc_utf8(exif["FocalLength"], charset),
       'Image.WhiteBalance' => enc_utf8(exif["WhiteBalance"], charset),

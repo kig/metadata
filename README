@@ -56,9 +56,9 @@ List of supported formats
     Whatever you manage to make mplayer play.
     Plus special handlers for FLAC, m4a, ape, musepack, wavepack and wma.
     Successfully tested with:
-      mp3, flac, ogg, wav
+      mp3, flac, ogg, wav, ra, m4a, wma
     Should also work:
-      wma, m4a, wv, mpc, ape
+       wv, mpc, ape
 
   Video:
     Whatever you manage to make mplayer play.
@@ -81,8 +81,9 @@ List of supported formats
       dimensions missing due to the above temp PDF -thing.)
 
   Others:
-    Whatever extract spits out on the five or six bits of metadata I'm using
-    from it. Archive contents at least.
+    - BitTorrent .torrent files
+    - Archive contents
+    - Whatever `extract' outputs and I am handling
 
 
 Requirements

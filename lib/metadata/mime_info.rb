@@ -115,6 +115,7 @@ public
     video/x-theora+ogg
     audio/x-vorbis+ogg
     audio/mpeg
+    video/x-ms-asf
   )
 
   def generic_type?(t)
