@@ -455,10 +455,11 @@ extend self
             up = up.join("/") if up.is_a?(Array)
             pt = f['path']
             pt = pt.join("/") if pt.is_a?(Array)
-            {"path" => (up || enc_utf8(pt, charset)),
-             "length" => f['length'],
-             "md5sum" => f['md5sum']
-             }
+            fh = {"path" => (up || enc_utf8(pt, charset)),
+             "length" => f['length']
+            }
+            fh['md5sum'] = f['md5sum'] if f['md5sum']
+            fh
           }
         else
           nil
@@ -466,9 +467,11 @@ extend self
       'BitTorrent.Length' => i['length'],
       'BitTorrent.MD5Sum' => i['md5sum'],
       'BitTorrent.PieceLength' => i['piece length'],
-      
+      'BitTorrent.PieceCount' => i['pieces'].size / 20,
+
       'File.Software' => enc_utf8(h['created by'], charset),
       'Doc.Created' => parse_time(Time.at(h['creation date']).iso8601),
+      'BitTorrent.Comment' => enc_utf8(h['comment'], charset),
       'BitTorrent.Announce' => enc_utf8(h['announce'], charset),
       'BitTorrent.AnnounceList' => h['announce-list'],
       'BitTorrent.Nodes' => h['nodes']
