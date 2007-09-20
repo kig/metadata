@@ -200,7 +200,12 @@ extend self
   
 
   def audio_x_flac(fn, charset)
-    m = FlacInfo.new(fn)
+    m = nil
+    begin
+      m = FlacInfo.new(fn)
+    rescue # FlacInfo fails for flacs with id3 tags
+      return audio(fn, charset)
+    end
     t = m.tags
     si = m.streaminfo
     len = si["total_samples"].to_f / si["samplerate"]
