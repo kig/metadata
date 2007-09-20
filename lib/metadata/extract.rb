@@ -444,18 +444,28 @@ extend self
     h = File.read(fn).bdecode
     charset ||= h['encoding']
     i = h['info']
+    name = i['name.utf-8'] || enc_utf8(i['name'], charset)
     {
-      'Doc.Title' => i['name.utf-8'] || enc_utf8(i['name'], charset),
+      'Doc.Title' => name,
+      'BitTorrent.Name' => name,
       'BitTorrent.Files' =>
         if i['files']
           i['files'].map{|f|
-            {"path" => f['path.utf-8'] || enc_utf8(f['path'], charset),
-             "length" => f['length']}
+            up = f['path.utf-8']
+            up = up.join("/") if up.is_a?(Array)
+            pt = f['path']
+            pt = pt.join("/") if pt.is_a?(Array)
+            {"path" => (up || enc_utf8(pt, charset)),
+             "length" => f['length'],
+             "md5sum" => f['md5sum']
+             }
           }
         else
           nil
         end,
       'BitTorrent.Length' => i['length'],
+      'BitTorrent.MD5Sum' => i['md5sum'],
+      'BitTorrent.PieceLength' => i['piece length'],
       
       'File.Software' => enc_utf8(h['created by'], charset),
       'Doc.Created' => parse_time(Time.at(h['creation date']).iso8601),
