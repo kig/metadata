@@ -99,7 +99,7 @@ Requirements
     List of gems:
       flacinfo-rb
       wmainfo-rb
-      MP4info
+      MP4Info
       id3lib-ruby
       apetag
 
