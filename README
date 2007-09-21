@@ -221,8 +221,15 @@ Appendix A: Additional metadata fields
   Video.Title               string
   Video.TrackNo             integer
 
-  BitTorrent.Files          array of {'path' => string, 'length' => integer}
+  BitTorrent.Name           string
+  BitTorrent.Files          array of { 'path' => string,
+                                       'length' => integer,
+                                       'md5sum' => string }
   BitTorrent.Length         integer (size of single-file torrents)
+  BitTorrent.MD5Sum         string (md5sum for single-file torrents)
+  BitTorrent.PieceCount     integer
+  BitTorrent.PieceLength    integer (length of a single piece
+  BitTorrent.Comment        string
   BitTorrent.Announce       string (announce url)
   BitTorrent.AnnounceList   array of arrays of strings
   BitTorrent.Nodes          array of [hostname, port] -arrays

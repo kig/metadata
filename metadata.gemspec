@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
     'lib/metadata/extract.rb',
     'lib/metadata/mime_info.rb',
     'lib/metadata/mime_info_magic.rb',
-    'lib/metadata/mp3info.rb'
+    'lib/metadata/bt.rb'
   ].to_a
   s.executables << 'mdh'
   s.executables << 'chardet'
