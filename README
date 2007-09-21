@@ -220,6 +220,7 @@ Appendix A: Additional metadata fields
   Video.ReleaseDate         date
   Video.Title               string
   Video.TrackNo             integer
+  Video.Demuxer             string
 
   BitTorrent.Name           string
   BitTorrent.Files          array of { 'path' => string,

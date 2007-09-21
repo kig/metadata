@@ -158,7 +158,7 @@ extend self
       STDERR.puts "  Falling back to extract" if verbose
       rv = extract_extract_info(filename)
     end
-    rv['File.Format'] = mimetype.to_s
+    rv['File.Format'] ||= mimetype.to_s
     rv['File.Size'] = File.size(filename.to_s)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false)
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
@@ -391,8 +391,17 @@ extend self
       'Video.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
       'Video.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
       'Video.TrackNo', parse_num(h['Track'], :i),
-      'Video.Genre', enc_utf8(h['Genre'], charset)
+      'Video.Genre', enc_utf8(h['Genre'], charset),
+      'Video.Demuxer', enc_utf8(h['demuxer'], charset)
     }
+    case h['demuxer']
+    when 'avi'
+      info['File.Format'] = 'video/x-msvideo'
+    when 'mkv'
+      info['File.Format'] = 'video/x-matroska'
+    when 'mov'
+      info['File.Format'] = 'video/quicktime'
+    end
     id3.delete_if{|k,v| v.nil? }
     info.merge(id3)
   end

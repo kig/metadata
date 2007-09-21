@@ -112,9 +112,10 @@ public
     application/x-compressed-tar
     application/x-bzip-compressed-tar
     image/tiff
-    video/x-theora+ogg
     audio/x-vorbis+ogg
     audio/mpeg
+    audio/x-riff
+    video/x-theora+ogg
     video/x-ms-asf
   )
 
