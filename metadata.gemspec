@@ -21,4 +21,7 @@ Gem::Specification.new do |s|
   s.executables << 'mdh'
   s.executables << 'chardet'
   s.required_ruby_version = '>= 1.8.1'
+  %w(flacinfo-rb wmainfo-rb MP4info id3lib-ruby apetag).each{|dep|
+    s.add_dependency(dep)
+  }
 end
