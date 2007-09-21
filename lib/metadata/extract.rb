@@ -7,15 +7,17 @@ require 'flacinfo'
 require 'wmainfo'
 require 'mp4info'
 require 'apetag'
-require 'imlib2'
 require 'id3lib'
+require 'imlib2'
+
+require 'iconv'
+require 'fileutils'
+require 'pathname'
+require 'time'
+require 'date'
 
 require 'metadata/mime_info'
 require 'metadata/bt'
-require 'iconv'
-require 'time'
-require 'pathname'
-require 'fileutils'
 
 
 class Pathname
@@ -866,7 +868,7 @@ extend self
   end
 
   def parse_time(s)
-    return s if s.is_a? DateTime
+    return s if s.is_a?(DateTime)
     return nil if s.nil? or s.empty?
     DateTime.parse(s.to_s)
   rescue
