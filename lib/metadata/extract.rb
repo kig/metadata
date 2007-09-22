@@ -726,7 +726,7 @@ extend self
   def extract_exif(filename, charset=nil)
     exif = {}
     raw_exif = secure_filename(filename){|tfn|
-      `exiftool -s -t -d "%Y:%m:%dT%H:%M:%S%Z" #{tfn}`
+      `exiftool -s -t -d "%Y:%m:%dT%H:%M:%S%Z" #{tfn} 2>/dev/null`
     }.split("\n", 8).last
     raw_exif.strip.split("\n").each do |t|
       k,v = t.split("\t", 2)
