@@ -649,8 +649,8 @@ extend self
   }
   
   def mplayer_extract_info(filename)
-    mplayer = `which mplayer32`.strip
-    mplayer = `which mplayer`.strip if mplayer.empty?
+    mplayer = `which mplayer32 2>/dev/null`.strip
+    mplayer = `which mplayer 2>/dev/null`.strip if mplayer.empty?
     mplayer = "mplayer" if mplayer.empty?
     output = IO.popen("#{mplayer.dump} -quiet -identify -vo null -ao null -frames 0 -playlist - 2>/dev/null", "r+"){|mp|
       mp.puts filename
