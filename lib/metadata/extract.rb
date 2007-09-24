@@ -549,19 +549,19 @@ extend self
   end
   
   def application_msword__gettext(filename, charset, layout=false)
-    enc_utf8(`antiword #{escape_filename(filename)}`, charset)
+    secure_filename(filename){|sfn| enc_utf8(`antiword #{sfn}`, charset) }
   end
   
   def application_rtf__gettext(filename, charset, layout=false)
-    enc_utf8(`catdoc #{escape_filename(filename)}`, charset)
+    secure_filename(filename){|sfn| enc_utf8(`catdoc #{sfn}`, charset) }
   end
   
   def application_vnd_ms_powerpoint__gettext(filename, charset, layout=false)
-    enc_utf8(`catppt #{escape_filename(filename)}`, charset)
+    secure_filename(filename){|sfn| enc_utf8(`catppt #{sfn}`, charset) }
   end
 
   def application_vnd_ms_excel__gettext(filename, charset, layout=false)
-    enc_utf8(`xls2csv -d UTF-8 #{escape_filename(filename)}`, charset)
+    secure_filename(filename){|sfn| enc_utf8(`xls2csv -d UTF-8 #{sfn}`, charset) }
   end
 
   
