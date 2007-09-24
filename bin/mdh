@@ -19,6 +19,8 @@ opts = OptionParser.new do |opts|
   opts.on("-c", "Create mdh file"){|p| options[:create] = true }
   opts.on("-v", "Verbose output to stderr"){|p| Metadata.verbose = true }
   opts.on("-q", "Quiet mode, no error messages"){|p| Metadata.quiet = true }
+  opts.on("-s", "Include SHA1 checksum of file"){|p| Metadata.sha1sum = true }
+  opts.on("-m", "Include MD5 checksum of file"){|p| Metadata.md5sum = true }
   opts.on("-V", "Print out version number and exit"){|p|
     puts Metadata::VERSION
     exit!(0)

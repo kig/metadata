@@ -194,6 +194,13 @@ Appendix A: Additional metadata fields
   Doc.Language              string
   Doc.ModifyDate            date
   Doc.PageSizeName          string (A4, A5, letter, ...)
+  Doc.RevisionHistory       array of strings
+  Doc.ParagraphCount        integer
+  Doc.LineCount             integer
+  Doc.CharacterCount        integer
+  Doc.LastSavedBy           string
+  Doc.Keywords              array of strings
+  Doc.Template              string
 
   File.Software             string (software used to create the file)
 

@@ -120,7 +120,7 @@ end
 module Metadata
 extend self
 
-  attr_accessor :quiet, :verbose
+  attr_accessor :quiet, :verbose, :sha1sum, :md5sum
 
   # Extracts metadata from a file by guessing mimetype and calling matching
   # extractor methods (which mostly call external programs to do their bidding.)
@@ -157,6 +157,16 @@ extend self
     unless rv
       STDERR.puts "  Falling back to extract" if verbose
       rv = extract_extract_info(filename)
+    end
+    if sha1sum
+      secure_filename(filename){|sfn|
+        rv['File.SHA1Sum'] = `sha1sum #{sfn}`.split(" ",2)[0]
+      }
+    end
+    if md5sum
+      secure_filename(filename){|sfn|
+        rv['File.MD5Sum'] = `md5sum #{sfn}`.split(" ",2)[0]
+      }
     end
     rv['File.Format'] ||= mimetype.to_s
     rv['File.Size'] = File.size(filename.to_s)
@@ -675,22 +685,38 @@ extend self
     arr = secure_filename(filename){|tfn| `extract #{tfn}` }.strip.split("\n").map{|s| s.split(" - ",2) }
     h = arr.to_hash
     filenames = arr.find_all{|k,v| k == 'filename' }.map{|k,v| enc_utf8(v, nil) }
-    keywords = arr.find_all{|k,v| k == 'keyword' }.map{|k,v| enc_utf8(v, nil) }
+    keywords = arr.find_all{|k,v| k == 'keywords' }.map{|k,v| enc_utf8(v, nil) }
+    revisions = arr.find_all{|k,v| k == 'revision history' }.map{|k,v| enc_utf8(v, nil) }
     {
       'Doc.Title', enc_utf8(h['title'], nil),
-      'Doc.Genre', enc_utf8(h['genre'], nil),
-      'Doc.Album', enc_utf8(h['album'], nil),
-      'Doc.Artist', enc_utf8(h['artist'], nil),
-      'Doc.Language', enc_utf8(h['language'], nil),
       'Doc.Subject', enc_utf8(h['subject'], nil),
       'Doc.Author', enc_utf8(h['creator'], nil),
-      'Doc.Created', parse_time(h['date'] || h['creation date']),
-      'Doc.Modified', parse_time(h['modification date']),
+      'Doc.LastSavedBy', enc_utf8(h['last saved by'], nil),
+
+      'Doc.Language', enc_utf8(h['language'], nil),
+      
+      'Doc.Artist', enc_utf8(h['artist'], nil),
+      'Doc.Genre', enc_utf8(h['genre'], nil),
+      'Doc.Album', enc_utf8(h['album'], nil),
+      'Doc.Language', enc_utf8(h['language'], nil),
+
+      'Doc.Created', parse_time(h['creation date']),
+      'Doc.Modified', parse_time(h['modification date'] || h['date']),
+      'Doc.RevisionHistory', revisions.empty? ? nil : revisions,
+
       'Doc.Description', enc_utf8(h['description'], nil),
       'Doc.Keywords', keywords.empty? ? nil : keywords,
-      'File.Software', enc_utf8(h['software'], nil),
+
+      'File.Software', enc_utf8(h['software'] || h['generator'], nil),
+      'Doc.Template', enc_utf8(h['template'], nil),
+      
       'Archive.Contents', filenames.empty? ? nil : filenames,
-      'Doc.WordCount', parse_num(h['word count'], :i)
+
+      'Doc.WordCount',      parse_num(h['word count'], :i),
+      'Doc.PageCount',      parse_num(h['page count'], :i),
+      'Doc.ParagraphCount', parse_num(h['paragraph count'], :i),
+      'Doc.LineCount',      parse_num(h['line count'], :i),
+      'Doc.CharacterCount', parse_num(h['character count'], :i)
     }
   end
 
