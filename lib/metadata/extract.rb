@@ -675,6 +675,7 @@ extend self
     arr = secure_filename(filename){|tfn| `extract #{tfn}` }.strip.split("\n").map{|s| s.split(" - ",2) }
     h = arr.to_hash
     filenames = arr.find_all{|k,v| k == 'filename' }.map{|k,v| enc_utf8(v, nil) }
+    keywords = arr.find_all{|k,v| k == 'keyword' }.map{|k,v| enc_utf8(v, nil) }
     {
       'Doc.Title', enc_utf8(h['title'], nil),
       'Doc.Genre', enc_utf8(h['genre'], nil),
@@ -686,6 +687,7 @@ extend self
       'Doc.Created', parse_time(h['date'] || h['creation date']),
       'Doc.Modified', parse_time(h['modification date']),
       'Doc.Description', enc_utf8(h['description'], nil),
+      'Doc.Keywords', keywords.empty? ? nil : keywords,
       'File.Software', enc_utf8(h['software'], nil),
       'Archive.Contents', filenames.empty? ? nil : filenames,
       'Doc.WordCount', parse_num(h['word count'], :i)
