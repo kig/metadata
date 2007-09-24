@@ -142,11 +142,11 @@ Install
   Try "ruby setup.rb --help".
 
 
-Appendix A: Additional metadata fields
+Appendix A: Metadata fields
 --------------------------------------
 
-  This list contains the metadata fields added to the shared
-  file metadata spec.
+  This list contains the metadata fields output by Metadata and mdh.
+  The list follows the shared file metadata spec for the most part.
   http://wiki.freedesktop.org/wiki/Specifications/shared-filemetadata-spec
 
   field name              | field type
@@ -185,6 +185,24 @@ Appendix A: Additional metadata fields
   Audio.DebutAlbum          string
   Audio.RecordDate          string
   Audio.RecordLocation      string
+  v-- ORIGINAL FIELDS USED --v
+  Audio.Title               string
+  Audio.Artist              string
+  Audio.Album               string
+  Audio.AlbumArtist         string
+  Audio.AlbumTrackCount     integer
+  Audio.TrackNo             integer
+  Audio.DiscNo              integer
+  Audio.Performer           string
+  Audio.Duration            float
+  Audio.ReleaseDate         datetime
+  Audio.Comment             string
+  Audio.Genre               string
+  Audio.Codec               string
+  Audio.Samplerate          integer
+  Audio.Bitrate             float
+  Audio.Channels            integer
+  Audio.Lyrics              string
 
   Doc.Album                 string
   Doc.Artist                string
@@ -201,17 +219,51 @@ Appendix A: Additional metadata fields
   Doc.LastSavedBy           string
   Doc.Keywords              array of strings
   Doc.Template              string
+  v-- ORIGINAL FIELDS USED --v
+  Doc.Title                 string
+  Doc.Subject               string
+  Doc.Author                string
+  Doc.PageCount             integer
+  Doc.WordCount             integer
+  Doc.Created               datetime
 
   File.Software             string (software used to create the file)
+  File.MD5Sum               string (md5sum of file's contents)
+  File.SHA1Sum              string (sha1sum of file's contents)
+  v-- ORIGINAL FIELDS USED --v
+  File.Format               string (mime type, inode/directory for dirs)
+  File.Size                 integer
+  File.Content              string
+  File.Modified             string
 
   Image.DateCreated         date
   Image.DateTimeCreated     date
   Image.DateTimeOriginal    date
   Image.DimensionUnit       string (px, mm, pt, ...)
+  Image.Editor              string
   Image.EXIF                string (exiftool output)
   Image.Frames              integer
   Image.Modified            date
   Image.OriginatingProgram  string
+  v-- ORIGINAL FIELDS USED --v
+  Image.Height              float
+  Image.Width               float
+  Image.Title               string
+  Image.Date                datetime
+  Image.Creator             string
+  Image.Description         string
+  Image.Software            string
+  Image.CameraMake          string
+  Image.CameraModel         string
+  Image.ExposureProgram     string
+  Image.ExposureTime        float
+  Image.Fnumber             float
+  Image.Flash               boolean
+  Image.FocalLength         float
+  Image.ISOSpeed            float
+  Image.MeteringMode        string
+  Image.WhiteBalance        string
+  Image.Copyright           string
 
   Location.Latitude         float
   Location.Longitude        float

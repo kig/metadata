@@ -763,6 +763,7 @@ extend self
     info = {
       'Image.Description' => enc_utf8( exif["ImageDescription"] || exif["Description"] || exif["Caption-Abstract"], charset ),
       'Image.Creator' => enc_utf8( exif["Artist"] || exif["Creator"] || exif["By-line"], charset ),
+      'Image.Editor' => enc_utf8( exif["Editor"], charset ),
       'File.Software' => enc_utf8( exif["Software"], charset ),
       'Image.OriginatingProgram' => enc_utf8(exif["OriginatingProgram"], charset ),
       'Image.ExposureProgram' => enc_utf8(exif["ExposureProgram"], charset),
