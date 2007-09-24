@@ -72,13 +72,13 @@ List of supported formats
 
   Documents:
     Successfully tested with:
-      pdf, ppt, odp, sxi, ps, ps.gz, html, txt
-    Should work:
-    - OpenOffice docs work to some degree (personally, I'm using unoconv to
-      convert OO docs to temp PDFs for the text & dimensions extraction, so
-      those bits of data are missing.)
-    - MS Office docs to some degree (ppt at least, doc and xls should work too,
-      dimensions missing due to the above temp PDF -thing.)
+      pdf, ppt, odp, sxi, ps, ps.gz, html, txt, doc, ppt, xls
+      - I'm using unoconv to convert OO & MS docs to temp PDFs for the text &
+        dimensions extraction, so those bits of data are missing. MSOffice docs
+        are missing dimensions for the same reason. Here's a way to get them:
+        $ thumbnailer -s 1 -k foo.odp /tmp/foo.jpg
+        $ mdh foo.odp
+        $ rm foo.odp-temp.pdf /tmp/foo.jpg
 
   Others:
     - BitTorrent .torrent files
