@@ -448,21 +448,31 @@ extend self
       'Image.Width' => parse_val(w),
       'Image.Height' => parse_val(h),
       'Image.DimensionUnit' => 'px',
-      'Image.Frames' => id_out.split("\n").size
+      'Image.LayerCount' => [id_out.split("\n").size, 1].max
+    }.merge(exif)
+    info
+  end
+
+  def image_gif(filename, charset)
+    id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
+    w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
+    exif = (extract_exif(filename, charset) rescue {})
+    info = {
+      'Image.Width' => parse_val(w),
+      'Image.Height' => parse_val(h),
+      'Image.DimensionUnit' => 'px',
+      'Image.FrameCount' => [id_out.split("\n").size, 1].max
     }.merge(exif)
     info
   end
 
   def image_x_dcraw(filename, charset)
-    exif = extract_exif(filename, charset)
+    exif = (extract_exif(filename, charset) rescue {})
     dcraw = extract_dcraw(filename)
-    w, h = dcraw["Output size"].split("x",2).map{|s| s.strip }
     info = {
-      'Image.Width' => parse_val(w),
-      'Image.Height' => parse_val(h),
       'Image.Frames' => 1,
       'Image.DimensionUnit' => 'px'
-    }.merge(exif)
+    }.merge(exif).merge(dcraw)
     info
   end
 
@@ -761,23 +771,26 @@ extend self
       exif[k] = v
     end
     info = {
-      'Image.Description' => enc_utf8( exif["ImageDescription"] || exif["Description"] || exif["Caption-Abstract"], charset ),
+      'Image.Description' => enc_utf8( exif["ImageDescription"] || exif["Description"] || exif["Caption-Abstract"] || exif["Comment"], charset ),
       'Image.Creator' => enc_utf8( exif["Artist"] || exif["Creator"] || exif["By-line"], charset ),
       'Image.Editor' => enc_utf8( exif["Editor"], charset ),
       'File.Software' => enc_utf8( exif["Software"], charset ),
       'Image.OriginatingProgram' => enc_utf8(exif["OriginatingProgram"], charset ),
       'Image.ExposureProgram' => enc_utf8(exif["ExposureProgram"], charset),
-      'Image.ExposureTime' => enc_utf8(exif["ExposureTime"], charset),
       'Image.Copyright' => enc_utf8(exif["Copyright"] || exif["CopyrightNotice"] || exif["CopyrightURL"], charset),
-      'Image.ISOSpeed' => parse_num(exif["ISO"], :i),
+      'Image.ISOSpeed' => parse_num(exif["ISO"], :f),
       'Image.Fnumber' => parse_num(exif["FNumber"], :f),
       'Image.Flash' => enc_utf8(exif["FlashFired"], charset) == "True",
-      'Image.FocalLength' => enc_utf8(exif["FocalLength"], charset),
+      'Image.FocalLength' => parse_num(exif["FocalLength"], :f),
       'Image.WhiteBalance' => enc_utf8(exif["WhiteBalance"], charset),
       'Image.CameraMake' => enc_utf8(exif['Make'], charset),
       'Image.CameraModel' => enc_utf8(exif['Model'], charset),
       'Image.Title' => enc_utf8(exif['Title'], charset),
+      'Image.ColorMode' => enc_utf8(exif['ColorMode'], charset),
+      'Image.ColorSpace' => enc_utf8(exif['ColorSpace'], charset),
+
       'Image.EXIF' => enc_utf8(raw_exif, charset),
+      
       'Location.Latitude' => enc_utf8(exif['GPSLatitude'], charset),
       'Location.Longitude' => enc_utf8(exif['GPSLongitude'], charset)
     }
@@ -800,17 +813,38 @@ extend self
     if t = exif["DateTimeOriginal"]
       info['Image.DateTimeOriginal'] = parse_time(t.split(":",3).join("-"))
     end
+    if exif['ExposureTime']
+      d,n = exif['ExposureTime'].split("/")
+      info['Image.ExposureTime'] = d.to_f / n.to_f
+    end
     info
   end
 
   def extract_dcraw(filename)
-    h = {}
+    hash = {}
     secure_filename(filename){|tfn| `dcraw -i -v #{tfn}` }.strip.split("\n").
     each do |t|
       k,v = t.split(/:\s*/, 2)
-      h[k] = v
+      hash[k] = v
     end
-    h
+    w, h = hash["Output size"].split("x",2).map{|s| parse_num(s.strip, :i) }
+    t = hash
+    info = {
+      'Image.Width', w,
+      'Image.Height', h,
+      
+      'Image.FilterPattern', t['Filter pattern'],
+      'Image.FocalLength', parse_num(t['Focal length'], :f),
+      'Image.ISOSpeed', parse_num(t['ISO speed'], :f),
+      'Image.CameraModel', enc_utf8(t['Camera'], nil),
+      'Image.ComponentCount', parse_num(t['Raw colors'], :i),
+      'Image.Fnumber', parse_num(t['Aperture'], :f)
+    }
+    if t['Shutter']
+      d,n = t['Shutter'].split("/")
+      info['Image.ExposureTime'] = d.to_f / n.to_f
+    end
+    info
   end
 
   def pdfinfo_extract_info(filename)
@@ -826,7 +860,7 @@ extend self
       w,h = i['page size'].gsub(/[^0-9.]/, ' ').strip.split(/\s+/,2)
       wmm = w.to_f.points_to_mm
       hmm = h.to_f.points_to_mm
-      i['page_size'] = i['page size'].scan(/\(([^)]+)\)/)[0].to_s
+      i['page_size'] = i['page size'].scan(/\(([^)]+)\)/).flatten[0]
       i['width'] = wmm
       i['height'] = hmm
       i['dimensions_unit'] = 'mm'

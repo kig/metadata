@@ -55,30 +55,55 @@ List of supported formats
   Audio:
     Whatever you manage to make mplayer play.
     Plus special handlers for FLAC, m4a, ape, musepack, wavepack and wma.
+
     Successfully tested with:
       mp3, flac, ogg, wav, ra, m4a, wma
+
     Should also work:
-       wv, mpc, ape
+      wv, mpc, ape
+
 
   Video:
     Whatever you manage to make mplayer play.
+
     Successfully tested with:
       wmv, mov, divx, xvid, flv, ogm, mpg, mkv
 
+
   Images:
-    Should handle pretty much anything (apart from ORF.)
+    Should handle pretty much anything.
+    I.e. anything handled by ExifTool, ImageMagick, Imlib2 or dcraw.
+
     Successfully tested with:
-      jpeg, png, gif, nef, dng, crw, pef, psd, tga, tif, xcf, xpm, ppm, bmp
+      Web formats:
+        jpeg, png, gif, svg
+      Camera raws:
+        nef, dng, crw, pef, orf
+      Image editor state dumps:
+        psd, xcf
+      The rest:
+        tga, tif, bmp, xpm, ppm
+
 
   Documents:
     Successfully tested with:
-      pdf, ppt, odp, sxi, ps, ps.gz, html, txt, doc, ppt, xls
-      - I'm using unoconv to convert OO & MS docs to temp PDFs for the text &
-        dimensions extraction, so those bits of data are missing. MSOffice docs
-        are missing dimensions for the same reason. Here's a way to get them:
-        $ thumbnailer -s 1 -k foo.odp /tmp/foo.jpg
-        $ mdh foo.odp
-        $ rm foo.odp-temp.pdf /tmp/foo.jpg
+      Web formats:
+        html, txt
+      Print formats:
+        pdf, ps, ps.gz
+      OO formats:
+        sxi, odp
+      MS formats:
+        doc, ppt, xls
+
+    - I'm using unoconv to convert OO & MS docs to temp PDFs for the text &
+      dimensions extraction, so those bits of data are missing. MSOffice docs
+      are missing dimensions for the same reason. Here's a way to get them:
+      ( first, get Thumbnailer: http://dark.fhtr.org/repos/thumbnailer/ )
+      $ thumbnailer -s 1 -k foo.odp /tmp/foo.jpg
+      $ mdh foo.odp
+      $ rm foo.odp-temp.pdf /tmp/foo.jpg
+
 
   Others:
     - BitTorrent .torrent files
@@ -242,9 +267,13 @@ Appendix A: Metadata fields
   Image.DimensionUnit       string (px, mm, pt, ...)
   Image.Editor              string
   Image.EXIF                string (exiftool output)
-  Image.Frames              integer
+  Image.FrameCount          integer
+  Image.LayerCount          integer
   Image.Modified            date
   Image.OriginatingProgram  string
+  Image.ComponentCount      integer
+  Image.ColorMode           string (e.g. RGB)
+  Image.ColorSpace          string (e.g. sRGB)
   v-- ORIGINAL FIELDS USED --v
   Image.Height              float
   Image.Width               float
