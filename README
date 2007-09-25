@@ -256,6 +256,8 @@ Appendix A: Metadata fields
   File.MD5Sum               string (md5sum of file's contents)
   File.SHA1Sum              string (sha1sum of file's contents)
   v-- ORIGINAL FIELDS USED --v
+  File.Name                 string (basename of the file)
+  File.Path                 string (dirname of the file)
   File.Format               string (mime type, inode/directory for dirs)
   File.Size                 integer
   File.Content              string
