@@ -365,13 +365,15 @@ extend self
       'Audio.Samplerate', parse_num(h['audio_rate'], :i),
       'Audio.Channels', parse_num(h['audio_nch'], :i),
       
-      'Audio.Title', enc_utf8(h['Title'] || h['Name'] || h['name'], charset),
-      'Audio.Artist', enc_utf8(h['Artist'] || h['author'], charset),
-      'Audio.Album', enc_utf8(h['Album'], charset),
-      'Audio.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
-      'Audio.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Audio.TrackNo', parse_num(h['Track'], :i),
-      'Audio.Genre', enc_utf8(h['Genre'], charset)
+      'Audio.Title', enc_utf8(h['title'] || h['name'], charset),
+      'Audio.Artist', enc_utf8(h['artist'] || h['author'], charset),
+      'Audio.Album', enc_utf8(h['album'], charset),
+      'Audio.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
+      'Audio.Comment', enc_utf8(h['comment'] || h['comments'], charset),
+      'Audio.TrackNo', parse_num(h['track'], :i),
+      'Audio.Copyright', enc_utf8(h['copyright'], charset),
+      'Audio.Software', enc_utf8(h['software'], charset),
+      'Audio.Genre', parse_genre(enc_utf8(h['genre'], charset))
     }
     id3.delete_if{|k,v| v.nil? }
     info.merge(id3)
@@ -395,13 +397,15 @@ extend self
       'Audio.Samplerate', parse_num(h['audio_rate'], :i),
       'Audio.Channels', parse_num(h['audio_nch'], :i),
       
-      'Video.Title', enc_utf8(h['Title'] || h['Name'] || h['name'], charset),
-      'Video.Artist', enc_utf8(h['Artist'] || h['author'], charset),
-      'Video.Album', enc_utf8(h['Album'], charset),
-      'Video.ReleaseDate', parse_time(h['Date'] || h['Creation Date'] || h['Year']),
-      'Video.Comment', enc_utf8(h['Comment'] || h['Comments'], charset),
-      'Video.TrackNo', parse_num(h['Track'], :i),
-      'Video.Genre', enc_utf8(h['Genre'], charset),
+      'Video.Title', enc_utf8(h['title'] || h['name'], charset),
+      'Video.Artist', enc_utf8(h['artist'] || h['author'], charset),
+      'Video.Album', enc_utf8(h['album'], charset),
+      'Video.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
+      'Video.Comment', enc_utf8(h['comment'] || h['comments'], charset),
+      'Video.TrackNo', parse_num(h['track'], :i),
+      'Video.Genre', parse_genre(enc_utf8(h['genre'], charset)),
+      'Video.Copyright', enc_utf8(h['copyright'], charset),
+      'Video.Software', enc_utf8(h['software'], charset),
       'Video.Demuxer', enc_utf8(h['demuxer'], charset)
     }
     case h['demuxer']
@@ -685,7 +689,7 @@ extend self
     hash = Hash[*ids.flatten]
     hash.each{|k,v|
       if k =~ /^clip_info_name/
-        hash[v] = hash[k.sub("name", "value")]
+        hash[v.downcase] = hash[k.sub("name", "value")]
       end
     }
     hash
@@ -732,6 +736,10 @@ extend self
 
   def id3lib_extract(fn, charset)
     t = ID3Lib::Tag.new(fn)
+    time = t.year
+    if t.date
+      time = "#{time}-#{t.date[2,2]}-#{t.date[0,2]}"
+    end
     {
       'Audio.Title' => enc_utf8(t.title, charset),
       'Audio.Subtitle' => enc_utf8(t.subtitle, charset),
@@ -750,11 +758,11 @@ extend self
 
       'Audio.Album' => enc_utf8(t.album, charset),
       'Audio.Publisher' => enc_utf8(t.publisher, charset),
-      'Audio.ReleaseDate' => parse_time(enc_utf8(t.date || t.year, charset)),
-      'Audio.DiscNo' => parse_num(enc_utf8(t.disc, charset), :i),
-      'Audio.TrackNo' => parse_num(enc_utf8(t.track, charset), :i),
+      'Audio.ReleaseDate' => parse_time(time),
+      'Audio.DiscNo' => parse_num(t.disc, :i),
+      'Audio.TrackNo' => parse_num(t.track, :i),
 
-      'Audio.Tempo' => parse_num(enc_utf8(t.bpm, charset), :i),
+      'Audio.Tempo' => parse_num(t.bpm, :i),
       'Audio.Comment' => enc_utf8(t.comment, charset),
       'Audio.Lyrics' => enc_utf8(t.lyrics, charset),
       'Audio.Image' => t.find_all{|f| f[:id] == :APIC }.map{|f| f[:data] }[0]
@@ -944,11 +952,27 @@ extend self
     return nil if s.nil? or s.empty?
     DateTime.parse(s.to_s)
   rescue
-    t = s.to_s.scan(/[0-9]{4}/)[0]
-    unless t.nil?
+    t = s.to_s.scan(/\d{4}/)[0]
+    if t.nil?
+      t = s.to_s.scan(/\d{2}/)[0]
+      unless t.nil?
+        y = Time.now.year.to_s
+        t = "#{t.to_i > y[-2,2].to_i ? y[0,2].to_i-1 : y[0,2]}#{t}-01-01"
+        DateTime.parse(t)
+      else
+        nil
+      end
+    else
       t += "-01-01"
       DateTime.parse(t)
     end
+  end
+
+  def parse_genre(s)
+    return nil if s.nil? or s.empty?
+    return s unless s =~ /^\(\d+\)/
+    genre_num = s.scan(/\d+/).flatten.first.to_i
+    ID3Lib::Info::Genres[genre_num] || s
   end
 
 
