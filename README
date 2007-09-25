@@ -37,8 +37,12 @@ Usage
   # print out the metadata header from an MDH file
   mdh -e -p myfile.jpg.mdh
 
-  # strip out the metadata header from an MDH file and save it to myfile.jpg
+  # strip out the metadata header from an MDH file and write the actual file
+  # to myfile.jpg
   mdh -e myfile.jpg.mdh
+
+  # include file path, filename, md5sum and sha1sum in the metadata header
+  mdh --path --name -m -s myfile.jpg
 
   # print out the list of options
   mdh -h
