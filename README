@@ -71,7 +71,7 @@ List of supported formats
     Whatever you manage to make mplayer play.
 
     Successfully tested with:
-      wmv, mov, divx, xvid, flv, ogm, mpg, mkv
+      wmv, mov, divx, xvid, flv, ogg, mpg, mkv
 
 
   Images:
@@ -82,11 +82,11 @@ List of supported formats
       Web formats:
         jpeg, png, gif, svg
       Camera raws:
-        nef, dng, crw, pef, orf
+        nef, dng, crw, pef, orf, arw, raf, cr2
       Image editor state dumps:
         psd, xcf
       The rest:
-        tga, tif, bmp, xpm, ppm
+        tga, tif, bmp, xpm, ppm, pcx
 
 
   Documents:
@@ -111,8 +111,19 @@ List of supported formats
 
   Others:
     - BitTorrent .torrent files
-    - Archive contents
+    - Archive contents: tar.gz, zip
     - Whatever `extract' outputs and I am handling
+
+
+  Formats that yield very little metadata:
+    ai
+
+  Formats that don't yield usable metadata:
+    chm, sis, rb, rar, ttf
+
+  Formats that fail mimetype guessing:
+    exr
+
 
 
 Requirements
