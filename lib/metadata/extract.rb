@@ -814,7 +814,8 @@ extend self
       'Image.Copyright' => enc_utf8(exif["Copyright"] || exif["CopyrightNotice"] || exif["CopyrightURL"], charset),
       'Image.ISOSpeed' => parse_num(exif["ISO"], :f),
       'Image.Fnumber' => parse_num(exif["FNumber"], :f),
-      'Image.Flash' => enc_utf8(exif["FlashFired"], charset) == "True",
+      'Image.Flash' => exif["FlashFired"] ?
+                       enc_utf8(exif["FlashFired"], charset) == "True" : nil,
       'Image.FocalLength' => parse_num(exif["FocalLength"], :f),
       'Image.WhiteBalance' => enc_utf8(exif["WhiteBalance"], charset),
       'Image.CameraMake' => enc_utf8(exif['Make'], charset),

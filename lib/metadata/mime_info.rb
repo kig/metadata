@@ -106,6 +106,7 @@ public
     application/zip
     application/xml
     text/x-csrc
+    text/x-tex
     application/x-gzip
     application/x-tar
     application/x-bzip
