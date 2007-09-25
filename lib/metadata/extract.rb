@@ -170,15 +170,17 @@ extend self
       STDERR.puts "  Falling back to extract" if verbose
       rv = extract_extract_info(filename)
     end
-    if self.sha1sum
-      secure_filename(filename){|sfn|
-        rv['File.SHA1Sum'] = `sha1sum #{sfn}`.split(" ",2)[0]
-      }
-    end
-    if self.md5sum
-      secure_filename(filename){|sfn|
-        rv['File.MD5Sum'] = `md5sum #{sfn}`.split(" ",2)[0]
-      }
+    if File.file?(filename)
+      if self.sha1sum
+        secure_filename(filename){|sfn|
+          rv['File.SHA1Sum'] = `sha1sum #{sfn}`.split(" ",2)[0]
+        }
+      end
+      if self.md5sum
+        secure_filename(filename){|sfn|
+          rv['File.MD5Sum'] = `md5sum #{sfn}`.split(" ",2)[0]
+        }
+      end
     end
     if self.include_name
       rv['File.Name'] = enc_utf8(File.basename(filename), nil)
@@ -187,7 +189,12 @@ extend self
       rv['File.Path'] = enc_utf8(File.dirname(filename), nil)
     end
     rv['File.Format'] ||= mimetype.to_s
-    rv['File.Size'] = File.size(filename.to_s)
+    rv['File.Size'] = (
+      if File.directory?(filename)
+        Dir.entries(filename).size-2
+      else
+        File.size(filename)
+      end)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false)
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
     rv.delete_if{|k,v| v.nil? }
