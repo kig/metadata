@@ -120,7 +120,9 @@ end
 module Metadata
 extend self
 
-  attr_accessor :quiet, :verbose, :sha1sum, :md5sum
+  attr_accessor(:quiet, :verbose,
+                :sha1sum, :md5sum,
+                :include_name, :include_path)
 
   # Extracts metadata from a file by guessing mimetype and calling matching
   # extractor methods (which mostly call external programs to do their bidding.)
@@ -129,6 +131,16 @@ extend self
   #
   # Follows the Shared File Metadata Spec naming.
   # http://wiki.freedesktop.org/wiki/Specifications/shared-filemetadata-spec
+  #
+  # There are a couple flags that control the behaviour of
+  # the metadata extractor:
+  # 
+  #   Metadata.sha1sum = true # include File.SHA1Sum in the metadata
+  #   Metadata.md5sum = true  # include File.MD5Sum in the metadata
+  #   Metadata.include_name = true # include File.Name (file basename)
+  #   Metadata.include_path = true # include File.Path (file dirname)
+  #   Metadata.quiet = true   # don't print out Ruby error messages
+  #   Metadata.verbose = true # print out status messages to stderr
   # 
   # All strings are converted to UTF-8.
   #
@@ -158,15 +170,21 @@ extend self
       STDERR.puts "  Falling back to extract" if verbose
       rv = extract_extract_info(filename)
     end
-    if sha1sum
+    if self.sha1sum
       secure_filename(filename){|sfn|
         rv['File.SHA1Sum'] = `sha1sum #{sfn}`.split(" ",2)[0]
       }
     end
-    if md5sum
+    if self.md5sum
       secure_filename(filename){|sfn|
         rv['File.MD5Sum'] = `md5sum #{sfn}`.split(" ",2)[0]
       }
+    end
+    if self.include_name
+      rv['File.Name'] = enc_utf8(File.basename(filename), nil)
+    end
+    if self.include_path
+      rv['File.Path'] = enc_utf8(File.dirname(filename), nil)
     end
     rv['File.Format'] ||= mimetype.to_s
     rv['File.Size'] = File.size(filename.to_s)
