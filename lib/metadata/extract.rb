@@ -230,7 +230,7 @@ extend self
       'Audio.Duration' => len,
       'Audio.Samplerate' => si["samplerate"],
       'Audio.VariableBitrate' => true,
-      'Audio.Genre' => enc_utf8(t['GENRE'], charset),
+      'Audio.Genre' => parse_genre(enc_utf8(t['GENRE'], charset)),
       'Audio.ReleaseDate' => parse_time(t['DATE']),
       'Audio.TrackNo' => parse_num(t['TRACKNUMBER'], :i),
       'Audio.Channels' => si["channels"]
@@ -251,7 +251,7 @@ extend self
       'Audio.Duration' => m.SECS,
       'Audio.Samplerate' => m.FREQUENCY*1000,
       'Audio.VariableBitrate' => true,
-      'Audio.Genre' => enc_utf8(m.GNRE, charset),
+      'Audio.Genre' => parse_genre(enc_utf8(m.GNRE, charset)),
       'Audio.ReleaseDate' => parse_time(m.DAY),
       'Audio.TrackNo' => parse_num(tn, :i),
       'Audio.AlbumTrackCount' => parse_num(total, :i),
@@ -275,7 +275,7 @@ extend self
       'Audio.AlbumArtist' => enc_utf8(t['AlbumArtist'], charset),
       'Audio.Bitrate' => si["bitrate"],
       'Audio.Duration' => si["playtime_seconds"],
-      'Audio.Genre' => enc_utf8(t['Genre'], charset),
+      'Audio.Genre' => parse_genre(enc_utf8(t['Genre'], charset)),
       'Audio.ReleaseDate' => parse_time(t['Year']),
       'Audio.TrackNo' => parse_num(t['TrackNumber'], :i),
       'Audio.Copyright' => enc_utf8(t['Copyright'], charset),
@@ -297,6 +297,7 @@ extend self
     }
     fields.each{|k| md["Audio.#{k.gsub(" ", "")}"] = t[k] }
     ad.delete_if{|k,v| v.nil? }
+    md['Audio.Genre'] = parse_genre(md['Audio.Genre'])
     md.merge(ad)
   end
   alias_method :audio_x_musepack, :audio_x_ape
@@ -753,7 +754,7 @@ extend self
       'Audio.RemixedBy' => enc_utf8(t.remixed_by, charset),
       'Audio.InterpretedBy' => enc_utf8(t.interpreted_by, charset),
 
-      'Audio.Genre' => enc_utf8(t.genre, charset),
+      'Audio.Genre' => parse_genre(enc_utf8(t.genre, charset)),
       'Audio.Grouping' => enc_utf8(t.grouping, charset),
 
       'Audio.Album' => enc_utf8(t.album, charset),
@@ -971,7 +972,7 @@ extend self
   def parse_genre(s)
     return nil if s.nil? or s.empty?
     return s unless s =~ /^\(\d+\)/
-    genre_num = s.scan(/\d+/).flatten.first.to_i
+    genre_num = s.scan(/\d+/).first.to_i
     ID3Lib::Info::Genres[genre_num] || s
   end
 
