@@ -79,9 +79,16 @@ class String
 
   def to_utf8(charset=nil)
     us = nil
-    charsets = [charset, 'utf-8', 'utf-16', 'utf-32',
-      chardet,
-      'shift-jis','euc-jp','iso8859-1','cp1252','big-5'].compact
+    charsets = [charset, 'utf-8', chardet,
+      'utf-16', 'utf-32', 'shift-jis','euc-jp','iso8859-1','cp1252','big-5'].compact
+    case us
+    when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+      charsets.unshift 'utf-32'
+    when /^(\xFE\xFF|\xFF\xFE)/
+      charsets.unshift 'utf-16'
+    when /^\xEF\xBB\xBF/
+      charsets.unshift 'utf-8'
+    end
     charsets.find{|c|
       ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
     }
