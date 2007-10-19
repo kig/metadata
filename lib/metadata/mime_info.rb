@@ -107,6 +107,8 @@ public
     application/xml
     text/x-csrc
     text/x-tex
+    text/plain
+    application/octet-stream
     application/x-gzip
     application/x-tar
     application/x-bzip
