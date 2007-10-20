@@ -18,6 +18,7 @@ require 'date'
 
 require 'metadata/mime_info'
 require 'metadata/bt'
+require 'metadata/citeseer'
 
 
 class Pathname
@@ -129,6 +130,7 @@ extend self
 
   attr_accessor(:quiet, :verbose,
                 :sha1sum, :md5sum,
+                :no_text, :guess_title, :use_citeseer,
                 :include_name, :include_path)
 
   # Extracts metadata from a file by guessing mimetype and calling matching
@@ -202,7 +204,17 @@ extend self
       else
         File.size(filename)
       end)
-    rv['File.Content'] = extract_text(filename, mimetype, charset, false)
+    rv['File.Content'] = extract_text(filename, mimetype, charset, false) unless Metadata.no_text
+    if guess_title
+      text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
+      guess = text.to_s.find{|l| l =~ /^[A-Z]/ }
+      if guess and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|(\.dvi$)/
+        rv['Doc.Title'] = guess.strip
+      end
+    end
+    if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+      rv.merge!(citeseer_extract(rv['Doc.Title']))
+    end
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
     rv.delete_if{|k,v| v.nil? }
     rv
@@ -342,12 +354,17 @@ extend self
       charset = `pdftotext #{tfn} - | head -c 65536`.chardet
       h['words'] = `pdftotext #{tfn} - | wc -w 2>/dev/null`.strip.to_i
     }
+    if h['keywords']
+      keywords = h['keywords'].split(/[,.]/).map{|s| enc_utf8(s.strip, charset) }.find_all{|s| not s.empty? }
+    end
     {
       'Doc.Title', enc_utf8(h['title'], charset),
       'Doc.Author', enc_utf8(h['author'], charset),
       'Doc.Created', parse_time(h['creationdate']),
+      'Doc.Subject', enc_utf8(h['subject'], charset),
       'Doc.Modified', parse_time(h['moddate']),
       'Doc.PageCount', h['pages'],
+      'Doc.Keywords', keywords,
       'Doc.PageSizeName', h['page_size'],
       'Doc.WordCount', h['words'],
       'Doc.Charset', charset,
@@ -360,7 +377,7 @@ extend self
   def application_postscript(filename, charset)
     pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
     if File.exist?(pdf)
-      extract_extract_info(filename).merge(application_pdf(pdf, charset))
+      application_pdf(pdf, charset).merge(extract_extract_info(filename))
     else
       extract_extract_info(filename)
     end
@@ -698,7 +715,7 @@ extend self
     create_info_extractor(t) do |filename, charset|
       pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
       if File.exist?(pdf)
-        extract_extract_info(filename).merge(application_pdf(pdf, charset))
+        application_pdf(pdf, charset).merge(extract_extract_info(filename))
       else
         extract_extract_info(filename)
       end
@@ -908,6 +925,30 @@ extend self
       i['dimensions_unit'] = 'mm'
     end
     i
+  end
+
+
+  def citeseer_extract(title)
+    h = CiteSeer.get_info(title)
+    m = {}
+    m['Doc.Title'] = h['title']
+    m['Doc.Author'] = (h['creator'] || h['author'])
+    m['Doc.Description'] = h['description']
+    m['Doc.Publisher'] = h['publisher']
+    m['Doc.Contributor'] = h['contributor']
+    m['Doc.Subject'] = h['subject']
+    m['Doc.Source'] = h['source']
+    m['Doc.CiteSeerIdentifier'] = h['identifier']
+    m['Doc.Language'] = h['language']
+    m['Doc.PublishedIn'] = {
+      'publication', h['book'] || h['booktitle'] || h['journal'],
+      'pages', h['pages']
+    }
+    m['Doc.Citations'] = h['citations']
+    m['Doc.Published'] = parse_time(h['date'] || h['year'])
+
+    m.delete_if{|k,v| !v }
+    m
   end
 
 

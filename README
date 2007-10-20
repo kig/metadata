@@ -32,7 +32,7 @@ Usage
   mdh myfile.jpg
 
   # create myfile.jpg.mdh, which consists of an MDH metadata header + myfile.jpg
-  mdh -c myfile.jpg 
+  mdh -c myfile.jpg
 
   # print out the metadata header from an MDH file
   mdh -e -p myfile.jpg.mdh
@@ -43,6 +43,18 @@ Usage
 
   # include file path, filename, md5sum and sha1sum in the metadata header
   mdh --path --name -m -s myfile.jpg
+
+  # guess title for document (first line that starts with a capital letter)
+  mdh --guess-title foo.ps
+
+  # don't include document text (File.Content) in the metadata
+  mdh --no-text foo.ps
+
+  # query CiteSeer with the document title, add possible results to metadata
+  mdh --citeseer foo.ps
+
+  # If you have an unknown CS document, this might help identify it:
+  mdh --no-text --guess-title --citeseer foo.ps
 
   # print out the list of options
   mdh -h
@@ -142,6 +154,8 @@ Requirements
       MP4Info
       id3lib-ruby
       apetag
+      text
+      hpricot
 
     List of Debian packages:
       dcraw
@@ -259,6 +273,13 @@ Appendix A: Metadata fields
   Doc.LastSavedBy           string
   Doc.Keywords              array of strings
   Doc.Template              string
+  Doc.Publisher             string
+  Doc.PublishedIn           hash of {publication=>x, pages=>y}
+  Doc.Citations             array of {href=>a, text=>b, rest=>c} hashes
+  Doc.Contributor           string
+  Doc.CiteSeerIdentifier    string
+  Doc.Published             datetime
+  Doc.Source                string
   v-- ORIGINAL FIELDS USED --v
   Doc.Title                 string
   Doc.Subject               string
