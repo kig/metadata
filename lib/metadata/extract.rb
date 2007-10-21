@@ -273,11 +273,11 @@ extend self
 
     references = text.scan(/^(References|Citations)\s*\n(.+)/im).flatten.last
     if references
-      cites = parse_references(references)
+      cites = parse_references(enc_utf8(references))
     end
     
-    guess['Doc.Title'] = title.strip if title and title.strip.size < 100
-    guess['Doc.Description'] = abstract.strip if abstract
+    guess['Doc.Title'] = enc_utf8(title.strip) if title and title.strip.size < 100
+    guess['Doc.Description'] = enc_utf8(abstract.strip) if abstract
     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess
   end
