@@ -274,12 +274,18 @@ Appendix A: Metadata fields
   Doc.Keywords              array of strings
   Doc.Template              string
   Doc.Publisher             string
-  Doc.PublishedIn           hash of {publication=>x, pages=>y}
-  Doc.Citations             array of {href=>a, text=>b, rest=>c} hashes
+  Doc.PublicationName       string
+  Doc.PublicationPages      string
+  Doc.Citations             array of {href=>a, title=>b, rest=>c} hashes
   Doc.Contributor           string
   Doc.CiteSeerIdentifier    string
+  Doc.CiteSeerURL           string
   Doc.Published             datetime
   Doc.Source                string
+  Doc.DBLPIdentifier        string
+  Doc.CrossRef              string (BibTex crossref)
+  Doc.BibSource             string (BibTex source)
+  Doc.BibTexType            string (BibTex type: article, inbook, ...)
   v-- ORIGINAL FIELDS USED --v
   Doc.Title                 string
   Doc.Subject               string

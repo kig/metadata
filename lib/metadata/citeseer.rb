@@ -3,6 +3,7 @@ require 'hpricot'
 require 'yaml'
 require 'open-uri'
 require 'text'
+require 'metadata/bibtex'
 
 class String
   def rsplit(*args)
@@ -14,7 +15,12 @@ class CiteSeer
 
   def self.get_info(title)
     url = "http://citeseer.ist.psu.edu/cs?Documents&af=Title&q=#{URI.escape title}"
-    page = Hpricot.parse(open(url){|f| f.read })
+    page = begin
+      Hpricot.parse(open(url){|f| f.read })
+    rescue => e
+      STDERR.puts e, e.backtrace
+      return {}
+    end
 
     links = (page/'a').find_all{|a|
       a[:href] =~ %r{^http://citeseer.ist.psu.edu/([^/]+\.html)$}
@@ -37,14 +43,7 @@ class CiteSeer
     data_url = link[:href]
     data = open(data_url){|f| f.read }
     bibtex = data.scan(/<pre>(.*)<\/pre>/im).flatten.first
-    kv_array = bibtex.split("\n").map{|l|
-      l.sub(/[,}]\s*$/,'').strip.split(" = ",2)
-    }.find_all{|k,v| v }
-
-    bibtex_hash = {}
-    kv_array.each{|k,v|
-      bibtex_hash[k] = v.gsub(/^"|"$/,'').gsub(/\\"/, '"')
-    }
+    bibtex_hash = BibTex.parse(bibtex)
 
     abstract = ""
     citations = []
@@ -55,7 +54,13 @@ class CiteSeer
                           split("Documents on the same site",2)[0]
       citations = citation_html.split("<br>").inject([]){|s,i|
         s += i.scan(%r{(http://citeseer.ist.psu.edu/(context/\d+/\d+|[^/]+\.html))">([^<]+)<[^>]*>(\s*-\s*)?([^\n]+)}).
-              map{|href,_,text,_,rest| {'href' => href, 'text' => text, 'rest' => rest.gsub(/"\/(ACM|DBLP)LINK\//,'"')} }
+              map{|href,_,text,_,rest|
+                {
+                'href' => href,
+                'title' => text,
+                'rest' => rest.gsub(/"\/(ACM|DBLP)LINK\//,'"')
+                }
+              }
       }
     rescue => e
     end
