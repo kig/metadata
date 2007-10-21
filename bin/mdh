@@ -22,8 +22,16 @@ opts = OptionParser.new do |opts|
   opts.on("-s", "Include SHA1 checksum of file"){|p| Metadata.sha1sum = true }
   opts.on("-m", "Include MD5 checksum of file"){|p| Metadata.md5sum = true }
   opts.on("--no-text", "Don't extract text"){|p| Metadata.no_text = true }
-  opts.on("--guess-title", "Guess title if there is none"){|p| Metadata.guess_title = true }
-  opts.on("--citeseer", "Try to get metadata from Citeseer for documents"){|p| Metadata.use_citeseer = true }
+  opts.on("--guess-title", "Guess title if there is none"){|p|
+    Metadata.guess_title = true
+  }
+  opts.on("--guess-metadata", "Try to guess title, abstract and citations if there are none"){|p| Metadata.guess_metadata = true }
+  opts.on("--dblp", "Try to get DBLP metadata for document"){|p|
+    Metadata.use_dblp = true
+  }
+  opts.on("--citeseer", "Try to get Citeseer metadata for document"){|p|
+    Metadata.use_citeseer = true
+  }
   opts.on("--name", "Include filename"){|p| Metadata.include_name = true }
   opts.on("--path", "Include pathname"){|p| Metadata.include_path = true }
   opts.on("-V", "Print out version number and exit"){|p|

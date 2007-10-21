@@ -19,6 +19,7 @@ require 'date'
 require 'metadata/mime_info'
 require 'metadata/bt'
 require 'metadata/citeseer'
+require 'metadata/dblp'
 
 
 class Pathname
@@ -130,7 +131,8 @@ extend self
 
   attr_accessor(:quiet, :verbose,
                 :sha1sum, :md5sum,
-                :no_text, :guess_title, :use_citeseer,
+                :no_text, :guess_title, :guess_metadata,
+                :use_citeseer, :use_dblp,
                 :include_name, :include_path)
 
   # Extracts metadata from a file by guessing mimetype and calling matching
@@ -205,15 +207,22 @@ extend self
         File.size(filename)
       end)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false) unless Metadata.no_text
-    if guess_title
+    if guess_title or guess_metadata
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
-      guess = text.to_s.find{|l| l =~ /^[A-Z]/ }
-      if guess and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|(\.dvi$)/
-        rv['Doc.Title'] = guess.strip
+      guess = extract_guesses(text)
+      if guess['Doc.Title'] and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|(\.(dvi|doc)$)/
+        rv['Doc.Title'] = guess['Doc.Title']
       end
     end
     if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
       rv.merge!(citeseer_extract(rv['Doc.Title']))
+    end
+    if use_dblp and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+      rv.merge!(dblp_extract(rv['Doc.Title']))
+    end
+    if guess_metadata
+      rv['Doc.Citations'] ||= guess['Doc.Citations']
+      rv['Doc.Description'] ||= guess['Doc.Description']
     end
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
     rv.delete_if{|k,v| v.nil? }
@@ -253,7 +262,53 @@ extend self
   alias_method :[], 'extract'
 
 
-  
+  def extract_guesses(text)
+    return {} unless text
+    guess = {}
+
+    title = text.find{|l| l =~ /^[A-Z]/ }
+
+    abstract = text.scan(/^Abstract\s*\n(.+)\n(\d*\.?\s*)Introduction\s*\n/im).
+                    flatten.first
+
+    references = text.scan(/^(References|Citations)\s*\n(.+)/im).flatten.last
+    if references
+      cites = parse_references(references)
+    end
+    
+    guess['Doc.Title'] = title.strip if title and title.strip.size < 100
+    guess['Doc.Description'] = abstract.strip if abstract
+    guess['Doc.Citations'] = cites if cites and not cites.empty?
+    guess
+  end
+
+  def parse_references(refs)
+    cits = []
+    done = false
+    refs.scan(/\[([^\]]+)\]\s*([^\[]+)/m).each{|key, ref|
+      ref.gsub!(/^[0-9]+$/m, '\n') # remove page numbers
+      if ref.size > 400
+        ref = ref.split(/\f/,2).first
+        done = true
+      end
+      url = ref.scan(%r{http://\S+})[0]
+      url.sub!(/[,.]\Z/,'') if url
+      ar = ref.scan(/([^"“”]+)["“”]([^"“”]+)["“”](.+)/u)
+      unless ar.empty?
+        author, title, publisher = ar[0]
+        author = author.strip.sub(/[,.]\Z/,'')
+        publisher = publisher.strip.sub(/[,.]\Z/,'')
+        title = title.strip.sub(/[,.]\Z/,'')
+      end
+      # guess where appendices begin
+      cits << {'href' => url,
+       'title' => title || author || publisher || ref,
+       'rest' => "#{author} - #{publisher}"
+      }
+      break if done
+    }
+    cits
+  end
 
   def audio_x_flac(fn, charset)
     m = nil
@@ -930,6 +985,7 @@ extend self
 
   def citeseer_extract(title)
     h = CiteSeer.get_info(title)
+    return h if h.empty?
     m = {}
     m['Doc.Title'] = h['title']
     m['Doc.Author'] = (h['creator'] || h['author'])
@@ -937,19 +993,43 @@ extend self
     m['Doc.Publisher'] = h['publisher']
     m['Doc.Contributor'] = h['contributor']
     m['Doc.Subject'] = h['subject']
-    m['Doc.Source'] = h['source']
-    m['Doc.CiteSeerIdentifier'] = h['identifier']
+    m['Doc.Source'] = h['source'] || h['ee']
+    m['Doc.CiteSeerURL'] = h['identifier']
     m['Doc.Language'] = h['language']
-    m['Doc.PublishedIn'] = {
-      'publication', h['book'] || h['booktitle'] || h['journal'],
-      'pages', h['pages']
-    }
+    m['Doc.PublicationName'] = h['book'] || h['booktitle'] || h['journal']
+    m['Doc.PublicationPages'] = h['pages']
     m['Doc.Citations'] = h['citations']
     m['Doc.Published'] = parse_time(h['date'] || h['year'])
+    m['Doc.CiteSeerIdentifier'] = h['bibtex_id']
 
     m.delete_if{|k,v| !v }
     m
   end
+
+  def dblp_extract(title)
+    h = DBLP.get_info(title)
+    return h if h.empty?
+    m = {}
+    m['Doc.Title'] = h['title']
+    m['Doc.Author'] = h['author']
+    m['Doc.Description'] = h['description']
+    m['Doc.Publisher'] = h['publisher']
+    m['Doc.Contributor'] = h['contributor']
+    m['Doc.Subject'] = h['subject']
+    m['Doc.Source'] = h['ee']
+    m['Doc.CrossRef'] = h['crossref']
+    m['Doc.BibSource'] = h['bibsource']
+    m['Doc.Language'] = h['language']
+    m['Doc.PublicationName'] = h['book'] || h['booktitle'] || h['journal']
+    m['Doc.PublicationPages'] = h['pages']
+    m['Doc.Published'] = parse_time(h['date'] || h['year'])
+    m['Doc.BibTexType'] = h['bibtex_type']
+    m['Doc.DBLPIdentifier'] = h['bibtex_id']
+
+    m.delete_if{|k,v| !v }
+    m
+  end
+
 
 
   # Create a link to `filename' with a secure filename and yield it.
