@@ -47,14 +47,20 @@ Usage
   # guess title for document (first line that starts with a capital letter)
   mdh --guess-title foo.ps
 
+  # guess title, abstract and metadata for document
+  mdh --guess-metadata foo.ps
+
   # don't include document text (File.Content) in the metadata
   mdh --no-text foo.ps
 
   # query CiteSeer with the document title, add possible results to metadata
   mdh --citeseer foo.ps
 
+  # query DBLP with the document title, add possible results to metadata
+  mdh --dblp foo.ps
+
   # If you have an unknown CS document, this might help identify it:
-  mdh --no-text --guess-title --citeseer foo.ps
+  mdh --guess-metadata --dblp --citeseer foo.ps
 
   # print out the list of options
   mdh -h
