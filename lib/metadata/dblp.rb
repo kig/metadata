@@ -21,10 +21,15 @@ class DBLP
     return {} unless dblp_id
 
     data_url = "http://dblp.uni-trier.de/rec/bibtex/#{dblp_id}"
-    data = open(data_url){|f| f.read }
-    page = Hpricot.parse(data)
-    bibtex = (page / 'pre').text
-    BibTex.parse(bibtex)
+    begin
+      data = open(data_url){|f| f.read }
+      page = Hpricot.parse(data)
+      bibtex = (page / 'pre').first.inner_text
+      BibTex.parse(bibtex)
+    rescue => e
+      STDERR.puts e, e.backtrace
+      {}
+    end
   end
 
 end
