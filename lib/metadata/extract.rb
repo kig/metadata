@@ -268,16 +268,24 @@ extend self
 
     title = text.find{|l| l =~ /^[A-Z]/ }
 
-    abstract = text.scan(/^Abstract\s*\n(.+)\n(\d*\.?\s*)Introduction\s*\n/im).
-                    flatten.first
+    abstract = text.scan(
+      /^Abstract\s*\n(.+)\n\s*((d+\.)|(\d*\.?\s*)Introduction)\s*\n/im
+    ).flatten.first
+
+    if abstract and abstract.size > 1000
+      abstract = abstract.split(/(?=\n)/).inject(""){|s,i|
+        s << i unless s.size > 1000
+        s
+      } + "\n[...]"
+    end
 
     references = text.scan(/^(References|Citations)\s*\n(.+)/im).flatten.last
     if references
-      cites = parse_references(references)
+      cites = parse_references(references.to_utf8)
     end
     
-    guess['Doc.Title'] = title.strip if title and title.strip.size < 100
-    guess['Doc.Description'] = abstract.strip if abstract
+    guess['Doc.Title'] = title.strip.to_utf8 if title and title.strip.size < 100
+    guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess
   end

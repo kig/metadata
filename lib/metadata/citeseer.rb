@@ -1,4 +1,5 @@
 require 'uri'
+require 'cgi'
 require 'hpricot'
 require 'yaml'
 require 'open-uri'
@@ -14,7 +15,8 @@ end
 class CiteSeer
 
   def self.get_info(title)
-    url = "http://citeseer.ist.psu.edu/cs?Documents&af=Title&q=#{URI.escape title}"
+    title = title.to_utf8
+    url = "http://citeseer.ist.psu.edu/cs?Documents&af=Title&q=#{CGI.escape title}"
     page = begin
       Hpricot.parse(open(url){|f| f.read })
     rescue => e
@@ -31,11 +33,11 @@ class CiteSeer
     end
 
     sorted_links = links.sort_by{|a|
-      Text::Levenshtein.distance(title.downcase, a.innerHTML.rsplit(" - ",2).first.downcase)
+      Text::Levenshtein.distance(title.downcase, a.inner_text.rsplit(" - ",2).first.downcase.to_utf8)
     }
     link = sorted_links.first
 
-    if Text::Levenshtein.distance(title.downcase, link.innerHTML.rsplit(" - ",2).first.downcase) > (title.length / 2)
+    if Text::Levenshtein.distance(title.downcase, link.inner_text.rsplit(" - ",2).first.downcase.to_utf8) > (title.length / 2)
       return {}
     end
 
