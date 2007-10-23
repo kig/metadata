@@ -20,6 +20,9 @@ require 'metadata/mime_info'
 require 'metadata/bt'
 require 'metadata/citeseer'
 require 'metadata/dblp'
+require 'metadata/acm_categories'
+require 'metadata/title_guesser'
+require 'metadata/reference_guesser'
 
 
 class Pathname
@@ -210,7 +213,7 @@ extend self
     if guess_title or guess_metadata
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
       guess = extract_guesses(text)
-      if guess['Doc.Title'] and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|(\.(dvi|doc)$)/
+      if guess['Doc.Title'] and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|((\.(dvi|doc)|WORD)$)/
         rv['Doc.Title'] = guess['Doc.Title']
       end
     end
@@ -223,6 +226,8 @@ extend self
     if guess_metadata
       rv['Doc.Citations'] ||= guess['Doc.Citations']
       rv['Doc.Description'] ||= guess['Doc.Description']
+      rv['Doc.ACMCategories'] ||= guess['Doc.ACMCategories']
+      rv['Doc.Keywords'] ||= guess['Doc.Keywords']
     end
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
     rv.delete_if{|k,v| v.nil? }
@@ -266,57 +271,51 @@ extend self
     return {} unless text
     guess = {}
 
-    title = text.find{|l| l =~ /^[A-Z]/ }
+    title = TitleGuesser.guess_title(text)
 
     abstract = text.scan(
-      /^Abstract\s*\n(.+)\n\s*((d+\.)|(\d*\.?\s*)Introduction)\s*\n/im
+      /^Abstract\s*\n(.+)\n\s*((d+\.)|(\d*\.?\s*)(Introduction|[a-z]+))\s*\n/im
     ).flatten.first
 
-    if abstract and abstract.size > 1000
-      abstract = abstract.split(/(?=\n)/).inject(""){|s,i|
-        s << i unless s.size > 1000
-        s
-      } + "\n[...]"
+    if abstract
+      kw_re = /\bkeywords\b/i
+      cat_re = /\bcategories\b/i
+      acm_cat_re = /\b([A-K]\.(\d(\.\d)?)?)\b/
+      kw_list_re = /(([^\.]+,)+[^\.\n]+)/m
+      if abstract =~ cat_re
+        cats = abstract.split(cat_re,2).last.
+                        scan(acm_cat_re).
+                        map{|hit| hit[0] }
+      end
+      if abstract =~ kw_re
+        kws = abstract.split(kw_re)[1..-1].map{|kw|
+                        kw.scan(kw_list_re).flatten.first
+                      }.compact.
+                      map{|hit| hit.split(/\s*,\s*/).map{|s|s.strip} }.
+                      max{|a,b| a.length <=> b.length }
+      end
+      if abstract.size > 1000
+        abstract = abstract.split(/(?=\n)/).inject(""){|s,i|
+          s << i unless s.size > 1000
+          s
+        } + "\n[...]"
+      end
     end
 
-    references = text.scan(/^(References|Citations)\s*\n(.+)/im).flatten.last
-    if references
-      cites = parse_references(references.to_utf8)
-    end
+    cites = ReferenceGuesser.guess_references(text)
     
     guess['Doc.Title'] = title.strip.to_utf8 if title and title.strip.size < 100
     guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
     guess['Doc.Citations'] = cites if cites and not cites.empty?
+    guess['Doc.Keywords'] = kws if kws and not kws.empty?
+    if cats
+      guess['Doc.ACMCategories'] = cats.map{|cat|
+        "#{cat.upcase} #{ACM_CATEGORIES[cat.upcase]}"
+      }
+    end
     guess
   end
 
-  def parse_references(refs)
-    cits = []
-    done = false
-    refs.scan(/\[([^\]]+)\]\s*([^\[]+)/m).each{|key, ref|
-      ref.gsub!(/^[0-9]+$/m, '\n') # remove page numbers
-      if ref.size > 400
-        ref = ref.split(/\f/,2).first
-        done = true
-      end
-      url = ref.scan(%r{http://\S+})[0]
-      url.sub!(/[,.]\Z/,'') if url
-      ar = ref.scan(/([^"“”]+)["“”]([^"“”]+)["“”](.+)/u)
-      unless ar.empty?
-        author, title, publisher = ar[0]
-        author = author.strip.sub(/[,.]\Z/,'')
-        publisher = publisher.strip.sub(/[,.]\Z/,'')
-        title = title.strip.sub(/[,.]\Z/,'')
-      end
-      # guess where appendices begin
-      cits << {'href' => url,
-       'title' => title || author || publisher || ref,
-       'rest' => "#{author} - #{publisher}"
-      }
-      break if done
-    }
-    cits
-  end
 
   def audio_x_flac(fn, charset)
     m = nil
