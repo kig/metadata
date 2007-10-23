@@ -292,6 +292,7 @@ Appendix A: Metadata fields
   Doc.CrossRef              string (BibTex crossref)
   Doc.BibSource             string (BibTex source)
   Doc.BibTexType            string (BibTex type: article, inbook, ...)
+  Doc.ACMCategories         array of strings
   v-- ORIGINAL FIELDS USED --v
   Doc.Title                 string
   Doc.Subject               string
