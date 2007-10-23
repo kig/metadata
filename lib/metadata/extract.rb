@@ -273,9 +273,9 @@ extend self
 
     title = TitleGuesser.guess_title(text)
 
-    abstract = text.scan(
+    abstract = remove_ligatures(text.scan(
       /^Abstract\s*\n(.+)\n\s*((d+\.)|(\d*\.?\s*)(Introduction|[a-z]+))\s*\n/im
-    ).flatten.first
+    ).flatten.first)
 
     if abstract
       kw_re = /\bkeywords\b/i
@@ -308,7 +308,7 @@ extend self
     guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess['Doc.Keywords'] = kws if kws and not kws.empty?
-    if cats
+    if cats and not cats.empty?
       guess['Doc.ACMCategories'] = cats.map{|cat|
         "#{cat.upcase} #{ACM_CATEGORIES[cat.upcase]}"
       }
@@ -1137,5 +1137,26 @@ extend self
     ID3Lib::Info::Genres[genre_num] || s
   end
 
+  def remove_ligatures(s)
+    return s unless s.is_a?(String)
+    s.gsub("æ", 'ae').
+      gsub("ä", 'ae').
+      gsub("ö", 'oe').
+      gsub("å", 'o').
+      gsub("Æ", 'AE').
+      gsub("œ", "ce").
+      gsub("Œ", "CE").
+      gsub("ŋ", "ng").
+      gsub("Ŋ", "NG").
+      gsub("ʩ", "fng").
+      gsub("ﬀ", "ff").
+      gsub("ﬁ", "fi").
+      gsub("ﬂ", "fl").
+      gsub("ﬃ", "ffi").
+      gsub("ﬄ", "ffl").
+      gsub("ﬅ", "ft").
+      gsub("ﬆ", "st").
+      gsub("ß", "ss")
+  end
 
 end

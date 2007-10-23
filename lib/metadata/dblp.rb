@@ -4,6 +4,7 @@ require 'yaml'
 require 'open-uri'
 require 'metadata/bibtex'
 require 'cgi'
+require 'text'
 
 class DBLP
 
@@ -21,7 +22,7 @@ class DBLP
     return {} unless dblp_id
 
     data_url = "http://dblp.uni-trier.de/rec/bibtex/#{dblp_id}"
-    begin
+    hash = begin
       data = open(data_url){|f| f.read }
       page = Hpricot.parse(data)
       bibtex = (page / 'pre').first.inner_text
@@ -30,6 +31,12 @@ class DBLP
       STDERR.puts e, e.backtrace
       {}
     end
+    if hash['title']
+      if Text::Levenshtein.distance(title.downcase, hash['title'].downcase.to_utf8) > (title.length / 2)
+        return {}
+      end
+    end
+    hash
   end
 
 end
