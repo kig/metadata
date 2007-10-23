@@ -56,7 +56,9 @@ extend self
   end
 
   def find_title_candidates(str)
-    str = str.split(/^\s*\d*\.\d*\s*(abstract|introduction)\s*$/i).first
+    str = Metadata.remove_ligatures(
+      str.split(/^\s*\d*\.\d*\s*(abstract|introduction)\s*$/i).first
+    )
     lines = str.split(/\n+/)
     i = 30
     scored = lines.map{|line|

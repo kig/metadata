@@ -12,25 +12,7 @@ extend self
   end
 
   def parse_references(refs)
-    data = refs.
-                  gsub("æ", 'ae').
-                  gsub("ä", 'ae').
-                  gsub("ö", 'oe').
-                  gsub("å", 'o').
-                  gsub("Æ", 'AE').
-                  gsub("œ", "ce").
-                  gsub("Œ", "CE").
-                  gsub("ŋ", "ng").
-                  gsub("Ŋ", "NG").
-                  gsub("ʩ", "fng").
-                  gsub("ﬀ", "ff").
-                  gsub("ﬁ", "fi").
-                  gsub("ﬂ", "fl").
-                  gsub("ﬃ", "ffi").
-                  gsub("ﬄ", "ffl").
-                  gsub("ﬅ", "ft").
-                  gsub("ﬆ", "st").
-                  gsub("ß", "ss")
+    data = Metadata.remove_ligatures(refs)
 
     cites = data.scan(/(.+?((\[)|((19|20)\d\d\.)))/).map{|s| s[0].strip.gsub(/\A[^\]]+\]|\[\Z/,'') }
     cites2 = data.scan(/\[[^\]]+\]([^\[]+)/).map{|s| s[0].strip }
