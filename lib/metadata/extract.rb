@@ -3,13 +3,6 @@ begin
 rescue LoadError
 end
 
-require 'flacinfo'
-require 'wmainfo'
-require 'mp4info'
-require 'apetag'
-require 'id3lib'
-require 'imlib2'
-
 require 'iconv'
 require 'fileutils'
 require 'pathname'
@@ -273,9 +266,9 @@ extend self
 
     title = TitleGuesser.guess_title(text)
 
-    abstract = remove_ligatures(text.scan(
-      /^Abstract\s*\n(.+)\n\s*((d+\.)|(\d*\.?\s*)(Introduction|[a-z]+))\s*\n/im
-    ).flatten.first)
+    abstract = remove_ligatures(text).scan(
+      /^abstract\s*\n(.+)\n\s*((d+\.)|(\d\.?)*\s*(introduction|[a-z]+))\s*\n/im
+    ).flatten.first
 
     if abstract
       kw_re = /\bkeywords\b/i
@@ -318,6 +311,7 @@ extend self
 
 
   def audio_x_flac(fn, charset)
+    require 'flacinfo'
     m = nil
     begin
       m = FlacInfo.new(fn)
@@ -347,6 +341,7 @@ extend self
   end
 
   def audio_mp4(fn, charset)
+    require 'mp4info'
     m = MP4Info.open(fn)
     tn, total = m.TRKN
     md = {
@@ -368,6 +363,7 @@ extend self
   end
 
   def audio_x_ms_wma(fn, charset)
+    require 'wmainfo'
     # hack hack hacky workaround
     m = WmaInfo.allocate
     m.instance_variable_set("@ext_info", {})
@@ -390,6 +386,7 @@ extend self
   end
 
   def audio_x_ape(fn, charset)
+    require 'apetag'
     m = ApeTag.new(fn)
     t = m.fields
     ad = (id3lib_extract(fn, charset) rescue {})
@@ -409,6 +406,17 @@ extend self
   alias_method :audio_x_musepack, :audio_x_ape
   alias_method :audio_x_wavepack, :audio_x_ape
 
+  def audio_mpeg(fn, charset)
+    require 'mp3info'
+    h = audio(fn, charset)
+    Mp3Info.open(fn){|mp3|
+      h['Audio.Duration'] = mp3.length
+      h['Audio.Bitrate'] = mp3.bitrate
+      h['Audio.VariableBitrate'] = mp3.vbr
+    }
+    h
+  end
+
   def application_pdf(filename, charset)
     h = pdfinfo_extract_info(filename)
     charset = nil
@@ -419,7 +427,7 @@ extend self
     if h['keywords']
       keywords = h['keywords'].split(/[,.]/).map{|s| enc_utf8(s.strip, charset) }.find_all{|s| not s.empty? }
     end
-    {
+    md = {
       'Doc.Title', enc_utf8(h['title'], charset),
       'Doc.Author', enc_utf8(h['author'], charset),
       'Doc.Created', parse_time(h['creationdate']),
@@ -434,6 +442,8 @@ extend self
       'Image.Height', h['height'],
       'Image.DimensionUnit', 'mm'
     }
+    md.delete_if{|k,v| v.nil? }
+    md
   end
 
   def application_postscript(filename, charset)
@@ -550,6 +560,7 @@ extend self
 
   def image(filename, charset)
     begin
+      require 'imlib2'
       img = Imlib2::Image.load(filename.to_s)
       w = img.width
       h = img.height
@@ -813,7 +824,7 @@ extend self
     filenames = arr.find_all{|k,v| k == 'filename' }.map{|k,v| enc_utf8(v, nil) }
     keywords = arr.find_all{|k,v| k == 'keywords' }.map{|k,v| enc_utf8(v, nil) }
     revisions = arr.find_all{|k,v| k == 'revision history' }.map{|k,v| enc_utf8(v, nil) }
-    {
+    md = {
       'Doc.Title', enc_utf8(h['title'], nil),
       'Doc.Subject', enc_utf8(h['subject'], nil),
       'Doc.Author', enc_utf8(h['creator'], nil),
@@ -844,9 +855,12 @@ extend self
       'Doc.LineCount',      parse_num(h['line count'], :i),
       'Doc.CharacterCount', parse_num(h['character count'], :i)
     }
+    md.delete_if{|k,v| v.nil? }
+    md
   end
 
   def id3lib_extract(fn, charset)
+    require 'id3lib'
     t = ID3Lib::Tag.new(fn)
     time = t.year
     if t.date
@@ -1131,6 +1145,7 @@ extend self
   end
 
   def parse_genre(s)
+    require 'id3lib'
     return nil if s.nil? or s.empty?
     return s unless s =~ /^\(\d+\)/
     genre_num = s.scan(/\d+/).first.to_i

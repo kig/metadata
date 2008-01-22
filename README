@@ -162,6 +162,7 @@ Requirements
       apetag
       text
       hpricot
+      ruby-mp3info
 
     List of Debian packages:
       dcraw
