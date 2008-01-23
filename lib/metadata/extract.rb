@@ -64,17 +64,40 @@ class String
   end
 
   def chardet
-    IO.popen("chardet", "r+"){|cd|
+    cset = IO.popen("chardet", "r+"){|cd|
       cd.write(self[0,65536])
       cd.close_write
       cd.read.strip
     }
+    if cset == 'None'
+      us = nil
+      charsets = ['utf-8',
+        'utf-16', 'utf-16be', 'utf-32', 'utf-32be',
+        'shift-jis','euc-jp',
+        'iso8859-1','cp1252',
+        'big-5','gbk','gb18030','gb2312'].compact
+      case self
+      when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+        charsets.unshift 'utf-32'
+      when /^(\xFE\xFF|\xFF\xFE)/
+        charsets.unshift 'utf-16'
+      when /^\xEF\xBB\xBF/
+        charsets.unshift 'utf-8'
+      end
+      cset = charsets.find{|c|
+        ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
+      }
+    end
+    cset
   end
 
   def to_utf8(charset=nil)
     us = nil
     charsets = [charset, 'utf-8', chardet,
-      'utf-16', 'utf-32', 'shift-jis','euc-jp','iso8859-1','cp1252','big-5'].compact
+      'utf-16', 'utf-16be', 'utf-32', 'utf-32be',
+      'shift-jis','euc-jp',
+      'iso8859-1','cp1252',
+      'big-5','gbk','gb18030','gb2312'].compact
     case self
     when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
       charsets.unshift 'utf-32'
@@ -82,6 +105,8 @@ class String
       charsets.unshift 'utf-16'
     when /^\xEF\xBB\xBF/
       charsets.unshift 'utf-8'
+    when /^[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\] -]+$/
+      charsets.unshift 'ascii'
     end
     charsets.find{|c|
       ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
@@ -209,11 +234,9 @@ extend self
       end
     end
     if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
-      require 'metadata/citeseer'
       rv.merge!(citeseer_extract(rv['Doc.Title']))
     end
     if use_dblp and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
-      require 'metadata/dblp'
       rv.merge!(dblp_extract(rv['Doc.Title']))
     end
     if guess_metadata
@@ -870,7 +893,7 @@ extend self
       time = "#{time}-#{t.date[2,2]}-#{t.date[0,2]}"
     end
     unless charset
-      ls = [t.title, t.artist, t.album].join
+      ls = [t.title, t.artist, t.album, t.lyrics, t.comment].join
       charset = ls.chardet if ls
     end
     {
@@ -1012,6 +1035,7 @@ extend self
 
 
   def citeseer_extract(title)
+    require 'metadata/citeseer'
     h = CiteSeer.get_info(title)
     return h if h.empty?
     m = {}
@@ -1035,6 +1059,7 @@ extend self
   end
 
   def dblp_extract(title)
+    require 'metadata/dblp'
     h = DBLP.get_info(title)
     return h if h.empty?
     m = {}
