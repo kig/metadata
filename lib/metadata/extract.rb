@@ -11,11 +11,7 @@ require 'date'
 
 require 'metadata/mime_info'
 require 'metadata/bt'
-require 'metadata/citeseer'
-require 'metadata/dblp'
 require 'metadata/acm_categories'
-require 'metadata/title_guesser'
-require 'metadata/reference_guesser'
 
 
 class Pathname
@@ -204,6 +200,8 @@ extend self
       end)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false) unless Metadata.no_text
     if guess_title or guess_metadata
+      require 'metadata/title_guesser'
+      require 'metadata/reference_guesser'
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
       guess = extract_guesses(text)
       if guess['Doc.Title'] and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|((\.(dvi|doc)|WORD)$)/
@@ -211,9 +209,11 @@ extend self
       end
     end
     if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+      require 'metadata/citeseer'
       rv.merge!(citeseer_extract(rv['Doc.Title']))
     end
     if use_dblp and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+      require 'metadata/dblp'
       rv.merge!(dblp_extract(rv['Doc.Title']))
     end
     if guess_metadata
@@ -409,11 +409,14 @@ extend self
   def audio_mpeg(fn, charset)
     require 'mp3info'
     h = audio(fn, charset)
-    Mp3Info.open(fn){|mp3|
-      h['Audio.Duration'] = mp3.length
-      h['Audio.Bitrate'] = mp3.bitrate
-      h['Audio.VariableBitrate'] = mp3.vbr
-    }
+    begin
+      Mp3Info.open(fn){|mp3|
+        h['Audio.Duration'] = mp3.length
+        h['Audio.Bitrate'] = mp3.bitrate
+        h['Audio.VariableBitrate'] = mp3.vbr
+      }
+    rescue => e
+    end
     h
   end
 
@@ -865,6 +868,10 @@ extend self
     time = t.year
     if t.date
       time = "#{time}-#{t.date[2,2]}-#{t.date[0,2]}"
+    end
+    unless charset
+      ls = [t.title, t.artist, t.album].join
+      charset = ls.chardet if ls
     end
     {
       'Audio.Title' => enc_utf8(t.title, charset),
