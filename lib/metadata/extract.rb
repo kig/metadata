@@ -77,12 +77,14 @@ class String
         'iso8859-1','cp1252',
         'big-5','gbk','gb18030','gb2312'].compact
       case self
-      when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+      when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
         charsets.unshift 'utf-32'
-      when /^(\xFE\xFF|\xFF\xFE)/
+      when /\A(\xFE\xFF|\xFF\xFE)/
         charsets.unshift 'utf-16'
-      when /^\xEF\xBB\xBF/
+      when /\A\xEF\xBB\xBF/
         charsets.unshift 'utf-8'
+      when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
+        charsets.unshift 'ascii'
       end
       cset = charsets.find{|c|
         ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
@@ -99,13 +101,13 @@ class String
       'iso8859-1','cp1252',
       'big-5','gbk','gb18030','gb2312'].compact
     case self
-    when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+    when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
       charsets.unshift 'utf-32'
-    when /^(\xFE\xFF|\xFF\xFE)/
+    when /\A(\xFE\xFF|\xFF\xFE)/
       charsets.unshift 'utf-16'
-    when /^\xEF\xBB\xBF/
+    when /\A\xEF\xBB\xBF/
       charsets.unshift 'utf-8'
-    when /^[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\] -]+$/
+    when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
       charsets.unshift 'ascii'
     end
     charsets.find{|c|
