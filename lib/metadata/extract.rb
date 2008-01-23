@@ -75,7 +75,7 @@ class String
     us = nil
     charsets = [charset, 'utf-8', chardet,
       'utf-16', 'utf-32', 'shift-jis','euc-jp','iso8859-1','cp1252','big-5'].compact
-    case us
+    case self
     when /^(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
       charsets.unshift 'utf-32'
     when /^(\xFE\xFF|\xFF\xFE)/
