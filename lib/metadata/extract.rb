@@ -30,8 +30,8 @@ class Pathname
     @dimensions ||= [width, height]
   end
 
-  def metadata
-    @metadata ||= Metadata.extract(self, mimetype)
+  def metadata(mime=mimetype, charset=nil)
+    @metadata ||= Metadata.extract(self, mime || mimetype, charset)
   end
 
   def length
@@ -103,18 +103,33 @@ class String
     case self
     when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
       charsets.unshift 'utf-32'
+      bom = true
     when /\A(\xFE\xFF|\xFF\xFE)/
       charsets.unshift 'utf-16'
+      bom = true
     when /\A\xEF\xBB\xBF/
       charsets.unshift 'utf-8'
+      bom = true
     when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
       charsets.unshift 'ascii'
     end
-    charsets.find{|c|
+    cset = charsets.find{|c|
       ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
     }
+    if not bom
+      if cset =~ /^utf-(16|32)(le|$)/i
+        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/
+        if us.length > 2 * us.gsub(na_re,'').length
+          rcset = cset.sub(/le|$/){|m| m == 'be' ? 'le' : 'be' }
+          nus = ((Iconv.iconv('utf-8', rcset, self)[0]) rescue false)
+          if nus and (nus.gsub(na_re,'').length > us.gsub(na_re,'').length)
+            us = nus
+          end
+        end
+      end
+    end
     us ||= self.gsub(/[^0-9a-z._ '"\*\+\-]/,'?')
-    us.gsub!(/^(\xFF\xFE|\xEF\xBB\xBF|\xFE\xFF)/, '') # strip UTF BOMs
+    us.sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/, '') # strip UTF BOMs
     us
   end
 

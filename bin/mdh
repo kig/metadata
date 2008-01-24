@@ -7,7 +7,6 @@ end
 
 require 'metadata'
 require 'optparse'
-require 'yaml'
 
 options = {}
 opts = OptionParser.new do |opts|
@@ -20,7 +19,14 @@ opts = OptionParser.new do |opts|
   opts.on("-v", "Verbose output to stderr"){|p| Metadata.verbose = true }
   opts.on("-q", "Quiet mode, no error messages"){|p| Metadata.quiet = true }
   opts.on("-s", "Include SHA1 checksum of file"){|p| Metadata.sha1sum = true }
+  opts.on("--field FIELDNAME", "Print named metadata field to stdout"){|p|
+    (options[:fields] ||= []) << p
+  }
   opts.on("-m", "Include MD5 checksum of file"){|p| Metadata.md5sum = true }
+  opts.on("--json", "Output JSON instead of YAML"){|p| options[:json] = true }
+  opts.on("--charset CHARSET", "Default charset to try"){|p|
+    options[:charset] = p
+  }
   opts.on("--no-text", "Don't extract text"){|p| Metadata.no_text = true }
   opts.on("--guess-title", "Guess title if there is none"){|p|
     Metadata.guess_title = true
@@ -59,7 +65,7 @@ filenames.each do |fn|
           exit!(2)
         end
         mdh_v = f.read(1)
-        if mdh_v != "\x01"
+        if mdh_v != "\x01" and mdh_v != "\x02"
           STDERR.puts("Unrecognized MDH version: #{mdh_v[0]}") unless Metadata.quiet
           exit!(3)
         end
@@ -75,9 +81,18 @@ filenames.each do |fn|
       }
     elsif options[:create]
       File.open(fn+'.mdh','wb'){|f|
-        d = fn.to_pn.metadata.to_yaml
+        md = fn.to_pn.metadata(nil, options[:charset])
+        if options[:json]
+          require 'json'
+          d = md.to_json
+          v = "\x02"
+        else
+          require 'yaml'
+          d = md.to_yaml
+          v = "\x01"
+        end
         f.write("MDH")
-        f.write("\x01")
+        f.write(v)
         f.write( [d.size].pack("N") )
         f.write(d)
         File.open(fn, 'rb'){|f2|
@@ -85,7 +100,19 @@ filenames.each do |fn|
         }
       }
     else
-      STDOUT.write(fn.to_pn.metadata.to_yaml)
+      md = fn.to_pn.metadata(nil, options[:charset])
+      if options[:fields]
+        d = options[:fields].map{|f|
+          md[f]
+        }.join("\n") + "\n"
+      elsif options[:json]
+        require 'json'
+        d = md.to_json
+      else
+        require 'yaml'
+        d = md.to_yaml
+      end
+      STDOUT.write(d)
     end
   elsif not Metadata.quiet
     STDERR.puts("File does not exist: #{fn}")
