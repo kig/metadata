@@ -70,12 +70,13 @@ class String
       cd.read.strip
     }
     if cset == 'None'
-      us = nil
       charsets = ['utf-8',
         'utf-16', 'utf-16be', 'utf-32', 'utf-32be',
         'shift-jis','euc-jp',
         'iso8859-1','cp1252',
         'big-5','gbk','gb18030','gb2312'].compact
+      pk = $KCODE
+      $KCODE = 'ascii'
       case self
       when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
         charsets.unshift 'utf-32'
@@ -84,22 +85,49 @@ class String
       when /\A\xEF\xBB\xBF/
         charsets.unshift 'utf-8'
       when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
-        charsets.unshift 'ascii'
+        charsets.unshift 'ascii' unless self.include?("\000")
       end
+      $KCODE = pk
       cset = charsets.find{|c|
-        ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
+        ((Iconv.iconv('utf-8', c, self)[0]) rescue false)
       }
+    end
+    if self.count("\000")*2 >= length and cset == 'ascii'
+      cset = 'utf-16' + (self.index("\000") % 2 == 0 ? 'le' : 'be')
+    end
+    if cset =~ /windows-1255/i and self =~ /[a-z](\344|\366|\326|\304)[a-z]/
+      cset = 'windows-1252'
     end
     cset
   end
 
   def to_utf8(charset=nil)
     us = nil
-    charsets = [charset, 'utf-8', chardet,
+    charsets = [charset, 'utf-8',
       'utf-16', 'utf-16be', 'utf-32', 'utf-32be',
       'shift-jis','euc-jp',
       'iso8859-1','cp1252',
-      'big-5','gbk','gb18030','gb2312'].compact
+      'big-5','gbk','gb18030','gb2312']
+    cd = chardet
+    pk = $KCODE
+    $KCODE = 'ascii'
+    if cd
+      case cd
+      when /iso-8859|windows-1252/i
+        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/
+        nl = gsub(na_re,'').length
+        if length > 1.5 * nl
+          charsets.insert(8, cd) # low ascii content
+        else
+          charsets.insert(2, cd) # high ascii content
+        end
+      when /utf/i
+        charsets.insert(1, cd)
+      else
+        charsets.insert(2, cd)
+      end
+    end
+    charsets.compact!
     case self
     when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
       charsets.unshift 'utf-32'
@@ -111,15 +139,18 @@ class String
       charsets.unshift 'utf-8'
       bom = true
     when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
-      charsets.unshift 'ascii'
+      charsets.unshift 'ascii' unless self.include?("\000")
+    when /\301\265|\220\333/
+      charsets.unshift 'gbk'
     end
+    $KCODE = pk
     cset = charsets.find{|c|
       ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
     }
     if not bom
       if cset =~ /^utf-(16|32)(le|$)/i
         na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/
-        if us.length > 2 * us.gsub(na_re,'').length
+        if us.length > 1.9 * us.gsub(na_re,'').length
           rcset = cset.sub(/le|$/){|m| m == 'be' ? 'le' : 'be' }
           nus = ((Iconv.iconv('utf-8', rcset, self)[0]) rescue false)
           if nus and (nus.gsub(na_re,'').length > us.gsub(na_re,'').length)
@@ -911,7 +942,8 @@ extend self
     end
     unless charset
       ls = [t.title, t.artist, t.album, t.lyrics, t.comment].join
-      charset = ls.chardet if ls
+      charset = ls.chardet if ls and not ls.empty?
+      charset = nil if charset =~ /ISO-8859|windows-1252/i
     end
     {
       'Audio.Title' => enc_utf8(t.title, charset),
