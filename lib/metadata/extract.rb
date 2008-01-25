@@ -531,14 +531,55 @@ extend self
   alias_method :application_x_gzpostscript, :application_postscript
 
   def text_html(filename, charset)
+    require 'hpricot'
     words = secure_filename(filename){|tfn|
       `html2text #{tfn} | wc -w 2>/dev/null`
     }.strip.to_i
-    charset = (File.read(filename, 65536) || "").chardet
-    {
+    html = (File.read(filename, 65536) || "")
+    charset = html.chardet
+    h = {
       'Doc.WordCount' => words,
       'Doc.Charset' => charset
     }
+    begin
+      page = Hpricot.parse(html)
+      te = (page / 'title')[0]
+      if te
+        title = enc_utf8(te.inner_text, charset)
+        h['Doc.Title'] = title
+      end
+      tagstr = __get_meta(page, 'keywords', charset)
+      if tagstr
+        h['Doc.Keywords'] = tagstr.split(/\s*,\s*/)
+      end
+      h['Doc.Description'] = __get_meta(page, 'description', charset)
+      h['Doc.Author'] = (__get_meta(page, 'author', charset) ||
+                         __get_meta(page, 'dc.author', charset))
+      h['Doc.Publisher'] = (__get_meta(page, 'publisher', charset) ||
+                         __get_meta(page, 'dc.publisher', charset))
+      h['Doc.Subject'] = (__get_meta(page, 'subject', charset) ||
+                         __get_meta(page, 'dc.subject', charset))
+      geopos = __get_meta(page, 'geo.position', charset)
+      icbm = __get_meta(page, 'icbm', charset)
+      if geopos
+        latlon = geopos.strip.split(/\s*;\s*/).map{|n| n.to_f }
+      elsif icbm
+        latlon = icbm.strip.split(/\s*,\s*/).map{|n| n.to_f }
+      end
+      if latlon and latlon.size == 2
+        h['Location.Latitude'] = latlon[0]
+        h['Location.Longitude'] = latlon[1]
+      end
+    rescue
+    end
+    h
+  end
+
+  def __get_meta(page, name, charset=nil)
+    tag = (page / 'meta').find{|e|
+            e['name'].to_s.downcase == name.downcase }
+    return enc_utf8(tag['content'].to_s, charset) if tag
+    nil
   end
 
   def text(filename, charset)
