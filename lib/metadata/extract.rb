@@ -366,11 +366,11 @@ extend self
       end
     end
 
-    cites = ReferenceGuesser.guess_references(text)
+#     cites = ReferenceGuesser.guess_references(text)
     
     guess['Doc.Title'] = title.strip.to_utf8 if title and title.strip.size < 100
     guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
-    guess['Doc.Citations'] = cites if cites and not cites.empty?
+#     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess['Doc.Keywords'] = kws if kws and not kws.empty?
     if cats and not cats.empty?
       guess['Doc.ACMCategories'] = cats.map{|cat|
