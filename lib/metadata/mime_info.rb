@@ -234,7 +234,7 @@ public
   def get_mime_dirs
     dirs = []
 
-    if s = ENV["XDG_DATA_DIRS"] && tmp = s.split(":")
+    if s = ENV["XDG_DATA_DIRS"] and tmp = s.split(":")
       # strip trailing slashes, then append to the array
       tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
     end
@@ -246,13 +246,13 @@ public
 
     count = dirs.length
 
-    if s = ENV["XDG_DATA_HOME"] && tmp = s.split(":")
+    if s = ENV["XDG_DATA_HOME"] and tmp = s.split(":")
       # strip trailing slashes, then append to the array
       tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
     end
 
     # add default directory
-    if dirs.length == count && s = ENV["HOME"]
+    if dirs.length == count and s = ENV["HOME"]
       dirs << s + "/.local/share"
     end
 
