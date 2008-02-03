@@ -21,148 +21,154 @@
 require "singleton"
 
 class MimeInfoMagicEntry
-	attr_accessor :type, :priority, :rules
+  attr_accessor :type, :priority, :rules
 
-	def initialize(type, priority)
-		@type = type
-		@priority = priority
-		@rules = []
-	end
+  def initialize(type, priority)
+    @type = type
+    @priority = priority
+    @rules = []
+  end
 end
 
 class MimeInfoMagicRule
-	attr_accessor :indent, :offset, :val_len, :value,
-	              :mask, :wsize, :range
+  attr_accessor :indent, :offset, :val_len, :value,
+                :mask, :wsize, :range
 
-	def initialize()
-		@indent = 0
-		@range = 1
-		@wsize = 1
-	end
+  def initialize()
+    @indent = 0
+    @range = 1
+    @wsize = 1
+  end
 end
 
 class MimeInfoMagic
-	include Singleton
+  include Singleton
 
-	def init(dirs)
-		@magic = {}
-		@max_extents = 0
+  def init(dirs)
+    @magic = {}
+    @max_extents = 0
 
-		dirs.each do |dir|
-			file = dir + "/mime/magic"
+    dirs.each do |dir|
+      file = dir + "/mime/magic"
 
-			if File.file?(file)
-				read_magic(file)
-			end
-		end
-	end
+      if File.file?(file)
+        read_magic(file)
+      end
+    end
+  end
 
 public
-	def type(file, priority=[80, 2 ** 32])
-		return nil if @magic.empty?
-		return nil if (!File.file?(file)) || !(f = File.new(file))
-		return nil if !(data = f.read(@max_extents))
+  def type(file, priority=[80, 2 ** 32])
+    return nil if @magic.empty?
+    return nil if (!File.file?(file)) || !(f = File.new(file))
+    return nil if !(data = f.read(@max_extents))
 
-		@magic.each do |mime, entry|
-			if priority && !priority.empty?
-				next if entry.priority < priority[0] ||
-				        entry.priority > priority[1]
-			end
+    priority = priority.dup
+    m = nil
 
-			# check all rules against the file
-			return mime if check_magic_entry(entry, data)
-		end
+    @magic.each do |mime, entry|
+      if priority && !priority.empty?
+        next if entry.priority < priority[0] ||
+                entry.priority > priority[1]
+      end
 
-		return nil
-	end
+      # check all rules against the file
+      if check_magic_entry(entry, data)
+        m = mime
+        priority[0] = entry.priority + 0.00001
+      end
+    end
+
+    return m
+  end
 
 private
-	def read_magic(file)
-		f = File.new(file)
-		return if f.read(12) != "MIME-Magic\0\n"
+  def read_magic(file)
+    f = File.new(file)
+    return if f.read(12) != "MIME-Magic\0\n"
 
-		@max_extents = 0
+    @max_extents = 0
 
-		while buf = f.gets
-			# check for new mimetype
-			if buf =~ /^\[(\d+):(.*)\]$/
-				last_entry = MimeInfoMagicEntry.new($2, $1.to_i)
-				@magic[$2] = last_entry
-				next
-			elsif !(buf =~ /^(\d*)>(\d+)=(.).*$/)
-				next
-			end
+    while buf = f.gets
+      # check for new mimetype
+      if buf =~ /^\[(\d+):(.*)\]$/
+        last_entry = MimeInfoMagicEntry.new($2, $1.to_i)
+        @magic[$2] = last_entry
+        next
+      elsif !(buf =~ /^(\d*)>(\d+)=(.).*$/)
+        next
+      end
 
-			rule = MimeInfoMagicRule.new
-			rule.indent = $1.to_i
-			rule.offset = $2.to_i
+      rule = MimeInfoMagicRule.new
+      rule.indent = $1.to_i
+      rule.offset = $2.to_i
 
-			offs = $~.offset(3)[0]
+      offs = $~.offset(3)[0]
 
-			# read value length
-			rule.val_len = buf.unpack("@#{offs}n")[0]
-			offs += 2
+      # read value length
+      rule.val_len = buf.unpack("@#{offs}n")[0]
+      offs += 2
 
-			# read word size and range
-			buf =~ /.{#{offs + rule.val_len}}~*(\d*)\+*(\d*)$/
-			rule.wsize = (!$1 || $1.empty?) ? 1 : $1.to_i
+      # read word size and range
+      buf =~ /.{#{offs + rule.val_len}}~*(\d*)\+*(\d*)$/
+      rule.wsize = (!$1 || $1.empty?) ? 1 : $1.to_i
 
-			rule.range = (!$2 || $2.empty?) ? 1 : $2.to_i
+      rule.range = (!$2 || $2.empty?) ? 1 : $2.to_i
 
-			# read value
-			fmt = ["C", "n", "", "N"][rule.wsize - 1].to_s
-			rule.value = buf.unpack("@#{offs}#{fmt}#{rule.val_len}")
-			offs += rule.val_len
+      # read value
+      fmt = ["C", "n", "", "N"][rule.wsize - 1].to_s
+      rule.value = buf.unpack("@#{offs}#{fmt}#{rule.val_len}")
+      offs += rule.val_len
 
-			# read mask
-			if buf[offs, 1] == "&"
-				rule.mask = buf.unpack("@#{offs}#{fmt}#{rule.val_len}")
-			end
+      # read mask
+      if buf[offs, 1] == "&"
+        rule.mask = buf.unpack("@#{offs}#{fmt}#{rule.val_len}")
+      end
 
-			ex = rule.val_len + rule.offset + rule.range
-			@max_extents = ex unless @max_extents > ex
+      ex = rule.val_len + rule.offset + rule.range
+      @max_extents = ex unless @max_extents > ex
 
-			last_entry.rules << rule
-		end
-	end
+      last_entry.rules << rule
+    end
+  end
 
-	def check_magic_entry(entry, data)
-		return compare_indent(entry, data, 0, 0)
-	end
+  def check_magic_entry(entry, data)
+    return compare_indent(entry, data, 0, 0)
+  end
 
-	def compare_indent(entry, data, rule_no, indent)
-		rule = entry.rules.at(rule_no)
-		return false unless rule
+  def compare_indent(entry, data, rule_no, indent)
+    rule = entry.rules.at(rule_no)
+    return false unless rule
 
-		while rule && rule.indent == indent
-			if compare_data(rule, data)
-				r = entry.rules.at(rule_no + 1)
-				return true if (!r || r.indent <= indent) ||
-				               compare_indent(entry, data,
-				                              rule_no + 1, indent + 1)
-			end
+    while rule && rule.indent == indent
+      if compare_data(rule, data)
+        r = entry.rules.at(rule_no + 1)
+        return true if (!r || r.indent <= indent) ||
+                       compare_indent(entry, data,
+                                      rule_no + 1, indent + 1)
+      end
 
-			begin
-				rule_no += 1
-				rule = entry.rules.at(rule_no)
-			end while rule && rule.indent > indent
-		end
+      begin
+        rule_no += 1
+        rule = entry.rules.at(rule_no)
+      end while rule && rule.indent > indent
+    end
 
-		return false
-	end
+    return false
+  end
 
-	def compare_data(rule, data)
-		if rule.offset > data.length or
-		   rule.offset + rule.value.size > data.length
-			return false
-		end
-		fmt = ["C", "n", "", "N"][rule.wsize - 1].to_s
-		value = data.unpack(
-			"@#{rule.offset}#{fmt}#{rule.value.size+rule.range-1}")
-		while start = value.index(rule.value.first)
-			return true if value[0, rule.value.size] == rule.value
-			value = value[start+1..-1]
-		end
-		return false
-	end
+  def compare_data(rule, data)
+    if rule.offset > data.length or
+       rule.offset + rule.value.size > data.length
+      return false
+    end
+    fmt = ["C", "n", "", "N"][rule.wsize - 1].to_s
+    value = data.unpack(
+      "@#{rule.offset}#{fmt}#{rule.value.size+rule.range-1}")
+    while start = value.index(rule.value.first)
+      return true if value[0, rule.value.size] == rule.value
+      value = value[start+1..-1]
+    end
+    return false
+  end
 end
