@@ -104,7 +104,7 @@ filenames.each do |fn|
       if options[:fields]
         d = options[:fields].map{|f|
           md[f]
-        }.join("\n") + "\n"
+        }.join("\n")
       elsif options[:json]
         require 'json'
         d = md.to_json
