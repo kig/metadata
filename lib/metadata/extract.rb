@@ -1,17 +1,9 @@
-begin
-  require 'rubygems'
-rescue LoadError
-end
-
 require 'iconv'
-require 'fileutils'
 require 'pathname'
 require 'time'
 require 'date'
 
 require 'metadata/mime_info'
-require 'metadata/bt'
-require 'metadata/acm_categories'
 
 
 class Pathname
@@ -273,8 +265,8 @@ extend self
       end)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false) unless Metadata.no_text
     if guess_title or guess_metadata
-      require 'metadata/title_guesser'
-      require 'metadata/reference_guesser'
+      gem_require 'metadata/title_guesser'
+      gem_require 'metadata/reference_guesser'
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
       guess = extract_guesses(text)
       if guess['Doc.Title'] and rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|((\.(dvi|doc)|WORD)$)/
@@ -330,6 +322,21 @@ extend self
 
   alias_method :[], 'extract'
 
+  def gem_require(libname)
+    retried = false
+    begin
+      require libname
+    rescue LoadError
+      unless retried
+        STDERR.puts "Requiring rubygems" if verbose
+        require 'rubygems'
+        retried = true
+        retry
+      else
+        raise
+      end
+    end
+  end
 
   def extract_guesses(text)
     return {} unless text
@@ -373,6 +380,7 @@ extend self
 #     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess['Doc.Keywords'] = kws if kws and not kws.empty?
     if cats and not cats.empty?
+      require 'metadata/acm_categories'
       guess['Doc.ACMCategories'] = cats.map{|cat|
         "#{cat.upcase} #{ACM_CATEGORIES[cat.upcase]}"
       }
@@ -382,7 +390,7 @@ extend self
 
 
   def audio_x_flac(fn, charset)
-    require 'flacinfo'
+    gem_require 'flacinfo'
     m = nil
     begin
       m = FlacInfo.new(fn)
@@ -412,7 +420,7 @@ extend self
   end
 
   def audio_mp4(fn, charset)
-    require 'mp4info'
+    gem_require 'mp4info'
     m = MP4Info.open(fn)
     tn, total = m.TRKN
     md = {
@@ -434,7 +442,7 @@ extend self
   end
 
   def audio_x_ms_wma(fn, charset)
-    require 'wmainfo'
+    gem_require 'wmainfo'
     # hack hack hacky workaround
     m = WmaInfo.allocate
     m.instance_variable_set("@ext_info", {})
@@ -457,7 +465,7 @@ extend self
   end
 
   def audio_x_ape(fn, charset)
-    require 'apetag'
+    gem_require 'apetag'
     m = ApeTag.new(fn)
     t = m.fields
     ad = (id3lib_extract(fn, charset) rescue {})
@@ -478,7 +486,7 @@ extend self
   alias_method :audio_x_wavepack, :audio_x_ape
 
   def audio_mpeg(fn, charset)
-    require 'mp3info'
+    gem_require 'mp3info'
     h = audio(fn, charset)
     begin
       Mp3Info.open(fn){|mp3|
@@ -531,7 +539,7 @@ extend self
   alias_method :application_x_gzpostscript, :application_postscript
 
   def text_html(filename, charset)
-    require 'hpricot'
+    gem_require 'hpricot'
     words = secure_filename(filename){|tfn|
       `html2text #{tfn} | wc -w 2>/dev/null`
     }.strip.to_i
@@ -675,7 +683,7 @@ extend self
 
   def image(filename, charset)
     begin
-      require 'imlib2'
+      gem_require 'imlib2'
       img = Imlib2::Image.load(filename.to_s)
       w = img.width
       h = img.height
@@ -719,6 +727,7 @@ extend self
   end
 
   def application_x_bittorrent(fn, charset)
+    require 'metadata/bt'
     h = File.read(fn).bdecode
     charset ||= h['encoding']
     i = h['info']
@@ -975,7 +984,7 @@ extend self
   end
 
   def id3lib_extract(fn, charset)
-    require 'id3lib'
+    gem_require 'id3lib'
     t = ID3Lib::Tag.new(fn)
     time = t.year
     if t.date
@@ -1185,6 +1194,7 @@ extend self
   # filename escaped.
   #
   def secure_filename(filename)
+    require 'fileutils'
     if filename =~ /^-/
       dirname = File.dirname(File.expand_path(filename))
       tfn = "/tmp/" + temp_filename + (File.extname(filename) || "").
@@ -1267,7 +1277,7 @@ extend self
   end
 
   def parse_genre(s)
-    require 'id3lib'
+    gem_require 'id3lib'
     return nil if s.nil? or s.empty?
     return s unless s =~ /^\(\d+\)/
     genre_num = s.scan(/\d+/).first.to_i
