@@ -349,8 +349,8 @@ extend self
     ).flatten.first
 
     if abstract
-      kw_re = /\bkeywords\b/i
-      cat_re = /\bcategories\b/i
+      kw_re = /\bkeywords:?\b/i
+      cat_re = /\bcategories:?\b/i
       acm_cat_re = /\b([A-K]\.(\d(\.\d)?)?)\b/
       kw_list_re = /(([^\.]+,)+[^\.\n]+)/m
       if abstract =~ cat_re
