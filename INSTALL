@@ -4,7 +4,7 @@ Installing Programs with setup.rb
 Quick Start
 -----------
     
-  Type this (You might needs super user previledge):
+  Type this (You might needs super user privilege):
 
       ($ su)
        # ruby setup.rb
@@ -15,7 +15,7 @@ Quick Start
       $ ruby setup.rb all --prefix=$HOME
 
     
-Detailed Installtion Process
+Detailed Installation Process
 ----------------------------
     
   setup.rb invokes installation by three steps.  There are
@@ -26,7 +26,7 @@ Detailed Installtion Process
       $ ruby setup.rb setup
       # ruby setup.rb install
 
-  You can controll installation process by giving detailed
+  You can control installation process by giving detailed
   options for each tasks.  For example, --bin-dir=$HOME/bin
   let setup.rb install commands in $HOME/bin.
     
@@ -61,7 +61,7 @@ Tasks
     show
         Prints current configurations.
     setup
-        Compiles ruby extentions.
+        Compiles ruby extensions.
     install
         Installs files.
     clean
@@ -86,7 +86,7 @@ Tasks
     --rbdir=PATH
         the directory for ruby scripts
     --sodir=PATH
-        the directory for ruby extentions
+        the directory for ruby extensions
     --datadir=PATH
         the directory for shared data
     --rubypath=PATH
@@ -94,10 +94,10 @@ Tasks
     --rubyprog=PATH
         the ruby program using for installation
     --makeprog=NAME
-        the make program to compile ruby extentions
+        the make program to compile ruby extensions
     --without-ext
         forces to setup.rb never to compile/install
-        ruby extentions.
+        ruby extensions.
     --rbconfig=PATH
         your rbconfig.rb to load
     

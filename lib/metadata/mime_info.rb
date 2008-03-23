@@ -19,7 +19,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 require "singleton"
-require "rexml/document"
 require "metadata/mime_info_magic"
 
 
@@ -212,6 +211,7 @@ public
   # for mimetype string.
   #
   def load_info(mimetype)
+    require "rexml/document"
     files = get_mime_dirs.map{|dir|
       File.join(dir, 'mime', "#{mimetype}.xml")
     }.find_all{|file| File.file? file }
