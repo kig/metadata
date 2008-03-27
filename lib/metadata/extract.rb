@@ -703,6 +703,17 @@ extend self
     info
   end
 
+  def image_svg_xml(filename, charset)
+    w = secure_filename(filename){|tfn| `inkscape #{tfn} -W` }
+    h = secure_filename(filename){|tfn| `inkscape #{tfn} -H` }
+    info = {
+      'Image.Width' => parse_val(w),
+      'Image.Height' => parse_val(h),
+      'Image.DimensionUnit' => 'px'
+    }
+    info
+  end
+
   def image_gif(filename, charset)
     id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
     w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
