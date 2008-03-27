@@ -107,7 +107,7 @@ filenames.each do |fn|
         require 'yaml'
         d = md.to_yaml
       end
-      puts d
+      STDOUT.puts(d)
     end
   elsif not Metadata.quiet
     STDERR.puts("File does not exist: #{fn}")
