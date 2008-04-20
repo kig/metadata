@@ -121,7 +121,7 @@ List of supported formats
     - I'm using unoconv to convert OO & MS docs to temp PDFs for the text &
       dimensions extraction, so those bits of data are missing. MSOffice docs
       are missing dimensions for the same reason. Here's a way to get them:
-      ( first, get Thumbnailer: http://dark.fhtr.org/repos/thumbnailer/ )
+      ( first, get Thumbnailer: http://github.com/kig/thumbnailer/tree/master )
       $ thumbnailer -s 1 -k foo.odp /tmp/foo.jpg
       $ mdh foo.odp
       $ rm foo.odp-temp.pdf /tmp/foo.jpg
