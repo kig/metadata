@@ -520,8 +520,8 @@ extend self
       'Doc.PageSizeName', h['page_size'],
       'Doc.WordCount', h['words'],
       'Doc.Charset', charset,
-      'Image.Width', h['width'],
-      'Image.Height', h['height'],
+      'Image.Width', parse_num(h['width'], :f),
+      'Image.Height', parse_num(h['height'], :f),
       'Image.DimensionUnit', 'mm'
     }
     md.delete_if{|k,v| v.nil? }
@@ -628,8 +628,8 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Image.Width', parse_num(h['video_width'], :i),
-      'Image.Height', parse_num(h['video_height'], :i),
+      'Image.Width', parse_num(h['video_width'], :f),
+      'Image.Height', parse_num(h['video_height'], :f),
       'Image.DimensionUnit', 'px',
       'Video.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
       'Video.Framerate', parse_num(h['video_fps'], :f),
@@ -695,8 +695,8 @@ extend self
     end
     exif = (extract_exif(filename, charset) rescue {})
     info = {
-      'Image.Width' => parse_val(w),
-      'Image.Height' => parse_val(h),
+      'Image.Width' => parse_num(w, :f),
+      'Image.Height' => parse_num(h, :f),
       'Image.DimensionUnit' => 'px',
       'Image.LayerCount' => [id_out.split("\n").size, 1].max
     }.merge(exif)
@@ -707,8 +707,8 @@ extend self
     w = secure_filename(filename){|tfn| `xvfb-run -a inkscape #{tfn} -W` }
     h = secure_filename(filename){|tfn| `xvfb-run -a inkscape #{tfn} -H` }
     info = {
-      'Image.Width' => parse_val(w),
-      'Image.Height' => parse_val(h),
+      'Image.Width' => parse_num(w, :f),
+      'Image.Height' => parse_num(h, :f),
       'Image.DimensionUnit' => 'px'
     }
     info
@@ -719,8 +719,8 @@ extend self
     w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
     exif = (extract_exif(filename, charset) rescue {})
     info = {
-      'Image.Width' => parse_val(w),
-      'Image.Height' => parse_val(h),
+      'Image.Width' => parse_num(w, :f),
+      'Image.Height' => parse_num(h, :f),
       'Image.DimensionUnit' => 'px',
       'Image.FrameCount' => [id_out.split("\n").size, 1].max
     }.merge(exif)
@@ -1066,8 +1066,8 @@ extend self
 
       'Image.EXIF' => enc_utf8(raw_exif, charset),
       
-      'Location.Latitude' => enc_utf8(exif['GPSLatitude'], charset),
-      'Location.Longitude' => enc_utf8(exif['GPSLongitude'], charset)
+      'Location.Latitude' => parse_num(exif['GPSLatitude'], :f),
+      'Location.Longitude' => parse_num(exif['GPSLongitude'], :f)
     }
     if exif["MeteringMode"]
       info['Image.MeteringMode'] = enc_utf8(exif["MeteringMode"].split(/[^a-z]/i).map{|s|s.capitalize}.join, charset)
@@ -1102,7 +1102,7 @@ extend self
       k,v = t.split(/:\s*/, 2)
       hash[k] = v
     end
-    w, h = hash["Output size"].split("x",2).map{|s| parse_num(s.strip, :i) }
+    w, h = hash["Output size"].split("x",2).map{|s| parse_num(s.strip, :f) }
     t = hash
     info = {
       'Image.Width', w,
@@ -1242,7 +1242,18 @@ extend self
   end
 
   def parse_num(s, cast=nil)
-    return s if s.is_a? Numeric
+    if s.is_a? Numeric
+      return (
+        case cast
+        when :f
+          s.to_f
+        when :i
+          s.to_i
+        else
+          s
+        end
+      )
+    end
     return nil if s.nil? or s.empty? or not s.scan(/[0-9]+/)[0]
     case cast
     when :i
