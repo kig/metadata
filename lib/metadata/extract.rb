@@ -57,8 +57,10 @@ class String
 
   def chardet
     cset = IO.popen("chardet", "r+"){|cd|
-      cd.write(self[0,65536])
-      cd.close_write
+      Thread.new {
+        cd.write(self[0,65536])
+        cd.close_write
+      }
       cd.read.strip
     }
     if cset == 'None'
