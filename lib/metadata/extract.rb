@@ -1092,6 +1092,7 @@ extend self
     end
     if exif['ExposureTime']
       d,n = exif['ExposureTime'].split("/")
+      n ||= 1.0
       info['Image.ExposureTime'] = d.to_f / n.to_f
     end
     info
@@ -1119,6 +1120,7 @@ extend self
     }
     if t['Shutter']
       d,n = t['Shutter'].split("/")
+      n ||= 1.0
       info['Image.ExposureTime'] = d.to_f / n.to_f
     end
     info
