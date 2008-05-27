@@ -8,13 +8,14 @@ $missing = []
 
 def check(name, args, deb_package, expected = 0)
   system("#{name} #{args}")
-  $missing << [name, deb_package] if $?.exitstatus != expected
+  $missing << [name, args, deb_package] if $?.exitstatus != expected
 end
 
 check("antiword", "-h", "antiword", 0)
 check("catdoc", "-h", "catdoc", 1)
 check("catppt", "-h", "catdoc", 1)
 check("dcraw", "-v", "dcraw", 1)
+check("perl", "-e 'use Compress::Zlib'", "libcompress-zlib-perl", 0)
 check("exiftool", "-v", "libimage-exiftool-perl", 0)
 check("extract", "-v", "extract", 0)
 check("html2text", "-help", "html2text", 0)
@@ -31,6 +32,6 @@ check("wc", "--help", "coreutils", 0)
 check("xls2csv", "-h", "catdoc", 1)
 check("zcat", "-h", "gzip", 0)
 
-$missing.each{|name, pkg| out.puts "Missing #{name} to be found in #{pkg}." }
+$missing.each{|name, args, pkg| out.puts "Missing package #{pkg} (needed for `#{name} #{args}`)" }
 out.puts "All dependencies found." if $missing.empty?
 

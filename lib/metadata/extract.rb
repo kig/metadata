@@ -1037,34 +1037,46 @@ extend self
     }
   end
   
+  def extract_exif_tag(exif, filename, *tags)
+    tag = tags.find{|t| exif[t] }
+    value = exif[tag]
+    if value and value =~ /\A\s*\(Binary data \d+ bytes, use -b option to extract\)\s*\Z/
+      value = secure_filename(filename){|tfn|
+        `exiftool -b -#{tag} #{tfn} 2>/dev/null`
+      }
+    end
+    value
+  end
+
   def extract_exif(filename, charset=nil)
     exif = {}
     raw_exif = secure_filename(filename){|tfn|
-      `exiftool -s -t -d "%Y:%m:%dT%H:%M:%S%Z" #{tfn} 2>/dev/null`
+      `exiftool -s -t -c "%.6f" -d "%Y:%m:%dT%H:%M:%S%Z" #{tfn} 2>/dev/null`
     }.split("\n", 8).last
     raw_exif.strip.split("\n").each do |t|
       k,v = t.split("\t", 2)
       exif[k] = v
     end
+    ex = lambda{|tags| enc_utf8( extract_exif_tag(exif, filename, tags), charset ) }
     info = {
-      'Image.Description' => enc_utf8( exif["ImageDescription"] || exif["Description"] || exif["Caption-Abstract"] || exif["Comment"], charset ),
-      'Image.Creator' => enc_utf8( exif["Artist"] || exif["Creator"] || exif["By-line"], charset ),
-      'Image.Editor' => enc_utf8( exif["Editor"], charset ),
-      'File.Software' => enc_utf8( exif["Software"], charset ),
-      'Image.OriginatingProgram' => enc_utf8(exif["OriginatingProgram"], charset ),
-      'Image.ExposureProgram' => enc_utf8(exif["ExposureProgram"], charset),
-      'Image.Copyright' => enc_utf8(exif["Copyright"] || exif["CopyrightNotice"] || exif["CopyrightURL"], charset),
+      'Image.Description' => ex[%w(ImageDescription Description Caption-Abstract Comment)],
+      'Image.Creator' => ex[%w(Artist Creator By-line)],
+      'Image.Editor' => ex[["Editor"]],
+      'File.Software' => ex[["Software"]],
+      'Image.OriginatingProgram' => ex[["OriginatingProgram"]],
+      'Image.ExposureProgram' => ex[["ExposureProgram"]],
+      'Image.Copyright' => ex[%w(Copyright CopyrightNotice CopyrightURL)],
       'Image.ISOSpeed' => parse_num(exif["ISO"], :f),
       'Image.Fnumber' => parse_num(exif["FNumber"], :f),
       'Image.Flash' => exif["FlashFired"] ?
                        enc_utf8(exif["FlashFired"], charset) == "True" : nil,
       'Image.FocalLength' => parse_num(exif["FocalLength"], :f),
-      'Image.WhiteBalance' => enc_utf8(exif["WhiteBalance"], charset),
-      'Image.CameraMake' => enc_utf8(exif['Make'], charset),
-      'Image.CameraModel' => enc_utf8(exif['Model'], charset),
-      'Image.Title' => enc_utf8(exif['Title'], charset),
-      'Image.ColorMode' => enc_utf8(exif['ColorMode'], charset),
-      'Image.ColorSpace' => enc_utf8(exif['ColorSpace'], charset),
+      'Image.WhiteBalance' => ex[["WhiteBalance"]],
+      'Image.CameraMake' => ex[['Make']],
+      'Image.CameraModel' => ex[['Model']],
+      'Image.Title' => ex[['Title']],
+      'Image.ColorMode' => ex[['ColorMode']],
+      'Image.ColorSpace' => ex[['ColorSpace']],
 
       'Image.EXIF' => enc_utf8(raw_exif, charset),
       
