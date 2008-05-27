@@ -1057,7 +1057,7 @@ extend self
       k,v = t.split("\t", 2)
       exif[k] = v
     end
-    ex = lambda{|tags| enc_utf8( extract_exif_tag(exif, filename, tags), charset ) }
+    ex = lambda{|tags| enc_utf8( extract_exif_tag(exif, filename, *tags), charset ) }
     info = {
       'Image.Description' => ex[%w(ImageDescription Description Caption-Abstract Comment)],
       'Image.Creator' => ex[%w(Artist Creator By-line)],
