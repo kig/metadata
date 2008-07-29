@@ -2,6 +2,7 @@ require 'iconv'
 require 'pathname'
 require 'time'
 require 'date'
+require 'base64'
 
 require 'metadata/mime_info'
 
@@ -17,7 +18,7 @@ class Pathname
   def pages
     @pages ||= (metadata['Doc.PageCount'] || 1)
   end
-  
+
   def dimensions
     @dimensions ||= [width, height]
   end
@@ -173,15 +174,15 @@ end
 
 
 class Numeric
-  
+
   def points_to_mm
     self * 0.3528
   end
-  
+
   def mm_to_points
     self / 0.3528
   end
-  
+
 end
 
 
@@ -204,14 +205,14 @@ extend self
   #
   # There are a couple flags that control the behaviour of
   # the metadata extractor:
-  # 
+  #
   #   Metadata.sha1sum = true # include File.SHA1Sum in the metadata
   #   Metadata.md5sum = true  # include File.MD5Sum in the metadata
   #   Metadata.include_name = true # include File.Name (file basename)
   #   Metadata.include_path = true # include File.Path (file dirname)
   #   Metadata.quiet = true   # don't print out Ruby error messages
   #   Metadata.verbose = true # print out status messages to stderr
-  # 
+  #
   # All strings are converted to UTF-8.
   #
   def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil)
@@ -376,7 +377,7 @@ extend self
     end
 
 #     cites = ReferenceGuesser.guess_references(text)
-    
+
     guess['Doc.Title'] = title.strip.to_utf8 if title and title.strip.size < 100
     guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
 #     guess['Doc.Citations'] = cites if cites and not cites.empty?
@@ -611,7 +612,7 @@ extend self
       'Audio.Codec', enc_utf8(h['audio_format'], charset),
       'Audio.Samplerate', parse_num(h['audio_rate'], :i),
       'Audio.Channels', parse_num(h['audio_nch'], :i),
-      
+
       'Audio.Title', enc_utf8(h['title'] || h['name'], charset),
       'Audio.Artist', enc_utf8(h['artist'] || h['author'], charset),
       'Audio.Album', enc_utf8(h['album'], charset),
@@ -625,7 +626,7 @@ extend self
     id3.delete_if{|k,v| v.nil? }
     info.merge(id3)
   end
-  
+
   def video(filename, charset)
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
@@ -643,7 +644,7 @@ extend self
       'Audio.Codec', enc_utf8(h['audio_format'], charset),
       'Audio.Samplerate', parse_num(h['audio_rate'], :i),
       'Audio.Channels', parse_num(h['audio_nch'], :i),
-      
+
       'Video.Title', enc_utf8(h['title'] || h['name'], charset),
       'Video.Artist', enc_utf8(h['artist'] || h['author'], charset),
       'Video.Album', enc_utf8(h['album'], charset),
@@ -801,7 +802,7 @@ extend self
     end
     enc_utf8(str, "UTF-8")
   end
-  
+
   def application_postscript__gettext(filename, charset, layout=false)
     page = 0
     str = secure_filename(filename){|tfn| `pstotext #{tfn}` }
@@ -831,15 +832,15 @@ extend self
     end
     enc_utf8(str, "ISO-8859-1") # pstotext outputs iso-8859-1
   end
-  
+
   def application_msword__gettext(filename, charset, layout=false)
     secure_filename(filename){|sfn| enc_utf8(`antiword #{sfn}`, charset) }
   end
-  
+
   def application_rtf__gettext(filename, charset, layout=false)
     secure_filename(filename){|sfn| enc_utf8(`catdoc #{sfn}`, charset) }
   end
-  
+
   def application_vnd_ms_powerpoint__gettext(filename, charset, layout=false)
     secure_filename(filename){|sfn| enc_utf8(`catppt #{sfn}`, charset) }
   end
@@ -848,7 +849,7 @@ extend self
     secure_filename(filename){|sfn| enc_utf8(`xls2csv -d UTF-8 #{sfn}`, charset) }
   end
 
-  
+
 
   open_office_types = %w(
   application/vnd.oasis.opendocument.text
@@ -865,7 +866,7 @@ extend self
   application/vnd.oasis.opendocument.chart
   application/vnd.oasis.opendocument.formula
   application/vnd.oasis.opendocument.database
-  
+
   application/vnd.sun.xml.writer
   application/vnd.sun.xml.writer.template
   application/vnd.sun.xml.calc
@@ -920,7 +921,7 @@ extend self
       end
     end
   }
-  
+
   (open_office_types + office_types).each{|t|
     create_info_extractor(t) do |filename, charset|
       pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
@@ -931,7 +932,7 @@ extend self
       end
     end
   }
-  
+
   def mplayer_extract_info(filename)
     mplayer = `which mplayer32 2>/dev/null`.strip
     mplayer = `which mplayer 2>/dev/null`.strip if mplayer.empty?
@@ -968,7 +969,7 @@ extend self
       'Doc.LastSavedBy', enc_utf8(h['last saved by'], nil),
 
       'Doc.Language', enc_utf8(h['language'], nil),
-      
+
       'Doc.Artist', enc_utf8(h['artist'], nil),
       'Doc.Genre', enc_utf8(h['genre'], nil),
       'Doc.Album', enc_utf8(h['album'], nil),
@@ -983,7 +984,7 @@ extend self
 
       'File.Software', enc_utf8(h['software'] || h['generator'], nil),
       'Doc.Template', enc_utf8(h['template'], nil),
-      
+
       'Archive.Contents', filenames.empty? ? nil : filenames,
 
       'Doc.WordCount',      parse_num(h['word count'], :i),
@@ -994,6 +995,11 @@ extend self
     }
     md.delete_if{|k,v| v.nil? }
     md
+  end
+
+  def base64 s
+    return nil if s.nil? || s.empty?
+    return Base64.encode64(s)
   end
 
   def id3lib_extract(fn, charset)
@@ -1033,10 +1039,10 @@ extend self
       'Audio.Tempo' => parse_num(t.bpm, :i),
       'Audio.Comment' => enc_utf8(t.comment, charset),
       'Audio.Lyrics' => enc_utf8(t.lyrics, charset),
-      'Audio.Image' => t.find_all{|f| f[:id] == :APIC }.map{|f| f[:data] }[0]
+      'Audio.Image' => base64(t.find_all{|f| f[:id] == :APIC }.map{|f| f[:data] }[0])
     }
   end
-  
+
   def extract_exif_tag(exif, filename, *tags)
     tag = tags.find{|t| exif[t] }
     value = exif[tag]
@@ -1079,7 +1085,7 @@ extend self
       'Image.ColorSpace' => ex[['ColorSpace']],
 
       'Image.EXIF' => enc_utf8(raw_exif, charset),
-      
+
       'Location.Latitude' => parse_num(exif['GPSLatitude'], :f),
       'Location.Longitude' => parse_num(exif['GPSLongitude'], :f)
     }
@@ -1122,7 +1128,7 @@ extend self
     info = {
       'Image.Width', w,
       'Image.Height', h,
-      
+
       'Image.FilterPattern', t['Filter pattern'],
       'Image.FocalLength', parse_num(t['Focal length'], :f),
       'Image.ISOSpeed', parse_num(t['ISO speed'], :f),
@@ -1217,7 +1223,7 @@ extend self
   # This is needed because of filenames like "-h".
   #
   # If the filename doesn't begin with a dash, passes it in
-  # double-quotes with double-quotes and dollar signs in 
+  # double-quotes with double-quotes and dollar signs in
   # filename escaped.
   #
   def secure_filename(filename)

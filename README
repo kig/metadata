@@ -148,9 +148,9 @@ Requirements
 ------------
 
   * Ruby 1.8
-  
+
   * Tons of metadata extraction programs and libs.
-    This package has many dependencies since there is no single universal 
+    This package has many dependencies since there is no single universal
     metadata header format that all files use. Blame resource forks, filename
     extensions, bags of bytes and mimetypes.
 
@@ -179,7 +179,7 @@ Requirements
       catdoc
       shared-mime-info
 
-  * You do want to install the latest versions of dcraw and 
+  * You do want to install the latest versions of dcraw and
     shared-mime-info to be able to handle camera raw images.
     http://cybercom.net/~dcoffin/dcraw/
     http://freedesktop.org/wiki/Software/shared-mime-info
@@ -219,7 +219,7 @@ Appendix A: Metadata fields
   Audio.Conductor           string
   Audio.Copyright           string (copyright message)
   Audio.Grouping            string
-  Audio.Image               binary string (embedded image data)
+  Audio.Image               base64-encoded binary string (embedded image data)
   Audio.InterpretedBy       string
   Audio.Lyricist            string
   Audio.Publisher           string
@@ -381,7 +381,7 @@ Appendix B: The MDH file format
 -------------------------------
 
   MDH files are built as follows:
-  
+
   bytes | content
   ---------------
     3   | "MDH"  - MDH file format identifier
