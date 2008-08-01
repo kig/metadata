@@ -22,6 +22,12 @@ opts = OptionParser.new do |opts|
   opts.on("--charset CHARSET", "Default charset to try"){|p|
     options[:charset] = p
   }
+  opts.on("--only-mime", "Extract only the mimetype of the file."){
+    options[:only_mime] = true
+  }
+  opts.on("--with-pdf FILENAME", "Merge the PDF's metadata with the extracted."){|p|
+    options[:pdf] = p
+  }
   opts.on("--no-text", "Don't extract text"){|p| Metadata.no_text = true }
   opts.on("--guess-title", "Guess title if there is none"){|p|
     Metadata.guess_title = true
@@ -95,19 +101,23 @@ filenames.each do |fn|
         }
       }
     else
-      md = fn.to_pn.metadata(nil, options[:charset])
-      if options[:fields]
-        d = options[:fields].map{|f|
-          md[f]
-        }.join("\n")
-      elsif options[:json]
-        require 'json'
-        d = md.to_json
+      if options[:only_mime]
+        STDOUT.puts(MimeInfo.get(fn))
       else
-        require 'yaml'
-        d = md.to_yaml
+        md = fn.to_pn.metadata(nil, options[:charset], options[:pdf])
+        if options[:fields]
+          d = options[:fields].map{|f|
+            md[f]
+          }.join("\n")
+        elsif options[:json]
+          require 'json'
+          d = md.to_json
+        else
+          require 'yaml'
+          d = md.to_yaml
+        end
+        STDOUT.puts(d)
       end
-      STDOUT.puts(d)
     end
   elsif not Metadata.quiet
     STDERR.puts("File does not exist: #{fn}")

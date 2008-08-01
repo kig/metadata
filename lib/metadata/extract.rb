@@ -23,8 +23,8 @@ class Pathname
     @dimensions ||= [width, height]
   end
 
-  def metadata(mime=mimetype, charset=nil)
-    @metadata ||= Metadata.extract(self, mime || mimetype, charset)
+  def metadata(mime=mimetype, charset=nil, pdf=nil)
+    @metadata ||= Metadata.extract(self, mime || mimetype, charset, pdf)
   end
 
   def length
@@ -215,7 +215,7 @@ extend self
   #
   # All strings are converted to UTF-8.
   #
-  def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil)
+  def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil, pdf=nil)
     filename = filename.to_s
     mimetype = Mimetype[mimetype] unless mimetype.is_a?( Mimetype )
     mts = mimetype.ancestors
@@ -267,6 +267,18 @@ extend self
         File.size(filename)
       end)
     rv['File.Content'] = extract_text(filename, mimetype, charset, false) unless Metadata.no_text
+    pdf ||= filename + "-temp.pdf"
+    if File.exist?(pdf)
+      pdf_metadata = application_pdf(pdf, charset)
+      overrides = %w(Image.DimensionUnit Image.Width Image.Height Doc.PageCount
+                     Doc.PageSizeName)
+      optrides = %w(Doc.WordCount Doc.Title Doc.Author)
+      overrides.each{|o| rv[o] = pdf_metadata[o] }
+      optrides.each {|o| rv[o] ||= pdf_metadata[o] }
+      if !Metadata.no_text and !rv['File.Content']
+        rv['File.Content'] = extract_text(pdf, Mimetype['application/pdf'], charset, false)
+      end
+    end
     if guess_title or guess_metadata
       gem_require 'metadata/title_guesser'
       gem_require 'metadata/reference_guesser'
@@ -532,12 +544,7 @@ extend self
   end
 
   def application_postscript(filename, charset)
-    pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
-    if File.exist?(pdf)
-      application_pdf(pdf, charset).merge(extract_extract_info(filename))
-    else
-      extract_extract_info(filename)
-    end
+    extract_extract_info(filename)
   end
   alias_method :application_x_gzpostscript, :application_postscript
 
@@ -913,23 +920,13 @@ extend self
 
   (open_office_types).each{|t|
     create_text_extractor(t) do |filename, charset, layout|
-      pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
-      if File.exist?(pdf)
-        application_pdf__gettext(pdf, charset, layout)
-      else
-        nil
-      end
+      nil
     end
   }
 
   (open_office_types + office_types).each{|t|
     create_info_extractor(t) do |filename, charset|
-      pdf = File.join(File.dirname(filename.to_s), File.basename(filename.to_s)+"-temp.pdf")
-      if File.exist?(pdf)
-        application_pdf(pdf, charset).merge(extract_extract_info(filename))
-      else
-        extract_extract_info(filename)
-      end
+      extract_extract_info(filename)
     end
   }
 
