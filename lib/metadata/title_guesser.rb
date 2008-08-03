@@ -9,7 +9,8 @@ extend self
     [/\bhttp:\/\//, -100], # URL
     [/\b[a-z0-9]+@[a-z0-9]+\./i, -100], # email address
     [/\b(ACM|MIT|[uU]niversity|[cC]ollege|[iI]nstitute of|[Ss]chool)\b/, -100],
-    
+    [/^\s*\d*\.?\s*(addendum)\s*$/i, -20], # addendum
+
     [/^\s*.{0,5}\s*$/, -30], # very short line
     [/^\s*.{0,10}\s*$/, -20], # short line
     [/[^\n]{80}/, -20], # long line
@@ -23,7 +24,7 @@ extend self
     [/\d\d\d+/, -10], # several numbers
     [/\d/, -5], # number
     [/\./, -5], # period
-    
+
     [/\.\s*$/, -10], # ends in period
 
     [/^\s*.{20,50}\s*$/, 10], # 20-50 characters
