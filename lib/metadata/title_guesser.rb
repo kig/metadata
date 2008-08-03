@@ -9,7 +9,6 @@ extend self
     [/\bhttp:\/\//, -100], # URL
     [/\b[a-z0-9]+@[a-z0-9]+\./i, -100], # email address
     [/\b(ACM|MIT|[uU]niversity|[cC]ollege|[iI]nstitute of|[Ss]chool)\b/, -100],
-    [/^\s*\d*\.?\s*(addendum)\s*$/i, -20], # addendum
 
     [/^\s*.{0,5}\s*$/, -30], # very short line
     [/^\s*.{0,10}\s*$/, -20], # short line
@@ -18,7 +17,7 @@ extend self
     [/[^\n]{320}/, -400], # very very long line
     [/^\s*[^A-Z]/, -100], # doesn't start with a capital letter
     [/^\s*[A-Z]+\s*$/, -5], # all uppercase
-    [/[A-Z0-9:.,-_\s*+]/i, -15], # non-simple-character
+    [/[^A-Z0-9:.,-_\s*+]/i, -15], # non-simple-character
 
     [/\b\d{4}\b/, -20], # year
     [/\d\d\d+/, -10], # several numbers
@@ -28,8 +27,9 @@ extend self
     [/\.\s*$/, -10], # ends in period
 
     [/^\s*.{20,50}\s*$/, 10], # 20-50 characters
-    [/\b(for|with|from|to|in)\b/i, 10], # uncommon in non-title
-    [/\b(an|a)\b/i, 10], # uncommon in non-title
+    [/\b(for|with|from|in)\b/i, 10], # uncommon in non-title
+    [/\b(the|an|a)\b/i, 10], # uncommon in non-title
+    [/^\b(addendum)\b/i, -20], # uncommon in title
     [/\b(overview)\b/i, 10] # uncommon in non-title
   ]
   WORDS = {}
