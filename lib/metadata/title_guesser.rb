@@ -60,8 +60,9 @@ extend self
     str = Metadata.remove_ligatures(
       str.split(/^\s*\d*\.\d*\s*(abstract|introduction)\s*$/i).first
     )
-    lines = str.split(/\n+/)
-    i = 30
+    pages = str.split(/\f+/)
+    lines = pages.join("\n").split(/\n+/)[0,20]
+    i = 50
     scored = lines.map{|line|
       line_score = match_score(line) + dict_score(line) + i
       i = i-10 if i > 0
