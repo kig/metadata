@@ -275,7 +275,7 @@ extend self
       optrides = %w(Doc.WordCount Doc.Title Doc.Author)
       overrides.each{|o| rv[o] = pdf_metadata[o] }
       optrides.each {|o| rv[o] ||= pdf_metadata[o] }
-      if !Metadata.no_text and !rv['File.Content']
+      if !Metadata.no_text and not to_s =~ /postscript/
         rv['File.Content'] = extract_text(pdf, Mimetype['application/pdf'], charset, false)
       end
     end
@@ -845,11 +845,11 @@ extend self
   end
 
   def application_rtf__gettext(filename, charset, layout=false)
-    secure_filename(filename){|sfn| enc_utf8(`catdoc #{sfn}`, charset) }
+    secure_filename(filename){|sfn| enc_utf8(`catdoc -d UTF-8 #{sfn}`, charset) }
   end
 
   def application_vnd_ms_powerpoint__gettext(filename, charset, layout=false)
-    secure_filename(filename){|sfn| enc_utf8(`catppt #{sfn}`, charset) }
+    secure_filename(filename){|sfn| enc_utf8(`catppt -d UTF-8 #{sfn}`, charset) }
   end
 
   def application_vnd_ms_excel__gettext(filename, charset, layout=false)
