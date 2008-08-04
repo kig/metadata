@@ -5,9 +5,10 @@ require 'optparse'
 
 options = {}
 opts = OptionParser.new do |opts|
-  opts.banner = "#{$0} [options] filename [filename ...]"
+  opts.banner = "USAGE: #{$0} [options] filename [filename ...]"
 
   opts.separator ""
+  opts.on("-h", "--help", "Show this message"){ puts opts.help; exit!(0) }
   opts.on("-e", "Extract mdh file"){|p| options[:extract] = true }
   opts.on("-p", "Print metadata to stdout"){|p| options[:print] = true }
   opts.on("-c", "Create mdh file"){|p| options[:create] = true }
@@ -22,17 +23,17 @@ opts = OptionParser.new do |opts|
   opts.on("--charset CHARSET", "Default charset to try"){|p|
     options[:charset] = p
   }
-  opts.on("--only-mime", "Extract only the mimetype of the file."){
+  opts.on("--only-mime", "Extract only the mimetype of the file"){
     options[:only_mime] = true
   }
-  opts.on("--with-pdf FILENAME", "Merge the PDF's metadata with the extracted."){|p|
+  opts.on("--with-pdf FILENAME", "Merge the PDF's metadata with the file's"){|p|
     options[:pdf] = p
   }
   opts.on("--no-text", "Don't extract text"){|p| Metadata.no_text = true }
   opts.on("--guess-title", "Guess title if there is none"){|p|
     Metadata.guess_title = true
   }
-  opts.on("--guess-metadata", "Try to guess title, abstract and citations if there are none"){|p| Metadata.guess_metadata = true }
+  opts.on("--guess-metadata", "Try to guess title, abstract and citations"){|p| Metadata.guess_metadata = true }
   opts.on("--dblp", "Try to get DBLP metadata for document"){|p|
     Metadata.use_dblp = true
   }
@@ -47,11 +48,18 @@ opts = OptionParser.new do |opts|
   }
 end
 
-opts.parse!(ARGV)
+begin
+  opts.parse!(ARGV)
+rescue => e
+  STDERR.puts e.message
+  STDERR.puts opts.help
+  exit!(1)
+end
+
 filenames = ARGV
 
 if filenames.empty?
-  puts opts.banner
+  STDERR.puts opts.banner
   exit!(1)
 end
 
