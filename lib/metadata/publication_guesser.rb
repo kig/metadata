@@ -33,13 +33,6 @@ extend self
     pubs = PUBLICATIONS.find_all{|p,n| str =~ p}
     pub = pubs[0]
     return pub if pub
-    confs = CONFERENCES.find_all{|p,n| str =~ p}
-    conf = confs[0]
-    if conf && str =~ /\bin proceedings\b/i
-      conf = conf.dup
-      conf[1] = "In Proceedings of " + conf[1]
-      return conf
-    end
     nil
   end
 
@@ -83,9 +76,6 @@ extend self
   def guess_pubdata(str)
     pages = str.strip.split(/\f+/)
     str = Metadata.remove_ligatures( pages.first )
-    publication = find_publication(str)
-    publisher = find_publisher(str, publication)
-    publish_time = find_publish_time(str, publication) if publication
     conference = find_conference(str)
     organizer = find_organizer(str, conference) if conference
     if conference
@@ -93,6 +83,13 @@ extend self
       conference = conference.dup
       conference[1] = conference[1] + " #{year}" if year
     end
+    publication = find_publication(str)
+    if conference && !publication
+      publication = conference.dup
+      publication[1] = "In Proceedings of " + publication[1]
+    end
+    publisher = find_publisher(str, publication)
+    publish_time = find_publish_time(str, publication) if publication
     h = {}
     h['Doc.PublishTime'] = Metadata.parse_time(publish_time.to_s) if publish_time
     h['Doc.Publication'] = publication[1] if publication
