@@ -50,14 +50,14 @@ extend self
     return y.to_i + 1900 if y and y.to_i > 60
     return y.to_i + 2000 if y and (y.to_i + 2000) <= (Time.now.year + 2)
     y = s.scan(/\b\d\d\d\d\b/)[0]
-    return y.to_i if y and y.to_i <= (Time.now.year + 2)
+    return y.to_i if y and y.to_i > 1960 and y.to_i <= (Time.now.year + 2)
     y = s.scan(/\b\d\d\b/)[0]
     return y.to_i + 1900 if y and y.to_i > 60
     ys = str.scan(/\b\d\d\d\d\b/)
     y = ys[-1]
-    return y.to_i if y and y.to_i <= (Time.now.year + 2)
+    return y.to_i if y and y.to_i > 1960 and y.to_i <= (Time.now.year + 2)
     y = ys[0]
-    return y.to_i if y and y.to_i <= (Time.now.year + 2)
+    return y.to_i if y and y.to_i > 1960 and y.to_i <= (Time.now.year + 2)
     nil
   end
 

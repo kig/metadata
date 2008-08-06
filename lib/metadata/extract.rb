@@ -298,13 +298,13 @@ extend self
     if guess_metadata or guess_pubdata
       %w(Doc.Publisher Doc.Published Doc.Publication Event.Name Event.Organizer
       ).each{|field|
-        rv[field] ||= guess[field]
+        rv[field] ||= guess[field] if guess[field]
       }
     end
     if guess_metadata
       %w(Doc.Citations Doc.Description Doc.ACMCategories Doc.Keywords
       ).each{|field|
-        rv[field] ||= guess[field]
+        rv[field] ||= guess[field] if guess[field]
       }
     end
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
