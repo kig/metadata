@@ -33,7 +33,10 @@ opts = OptionParser.new do |opts|
   opts.on("--guess-title", "Guess title if there is none"){|p|
     Metadata.guess_title = true
   }
-  opts.on("--guess-metadata", "Try to guess title, abstract and citations"){|p| Metadata.guess_metadata = true }
+  opts.on("--guess-pubdata", "Guess publication data if there is none"){|p|
+    Metadata.guess_pubdata = true
+  }
+  opts.on("--guess-metadata", "Try to guess title, pubdata and abstract"){|p| Metadata.guess_metadata = true }
   opts.on("--dblp", "Try to get DBLP metadata for document"){|p|
     Metadata.use_dblp = true
   }

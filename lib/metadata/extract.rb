@@ -191,7 +191,7 @@ extend self
 
   attr_accessor(:quiet, :verbose,
                 :sha1sum, :md5sum,
-                :no_text, :guess_title, :guess_metadata,
+                :no_text, :guess_title, :guess_metadata, :guess_pubdata,
                 :use_citeseer, :use_dblp,
                 :include_name, :include_path)
 
@@ -279,8 +279,9 @@ extend self
         rv['File.Content'] = extract_text(pdf, Mimetype['application/pdf'], charset, false)
       end
     end
-    if guess_title or guess_metadata
+    if guess_title or guess_metadata or guess_pubdata
       gem_require 'metadata/title_guesser'
+      gem_require 'metadata/publication_guesser'
       gem_require 'metadata/reference_guesser'
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
       guess = extract_guesses(text)
@@ -288,17 +289,23 @@ extend self
         rv['Doc.Title'] = guess['Doc.Title']
       end
     end
-    if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+    if use_citeseer and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|dvi|tex/
       rv.merge!(citeseer_extract(rv['Doc.Title']))
     end
-    if use_dblp and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|msword|oasis|sun|dvi|tex/
+    if use_dblp and rv['Doc.Title'] and mimetype.to_s =~ /pdf|postscript|dvi|tex/
       rv.merge!(dblp_extract(rv['Doc.Title']))
     end
+    if guess_metadata or guess_pubdata
+      %w(Doc.Publisher Doc.Published Doc.Publication Event.Name Event.Organizer
+      ).each{|field|
+        rv[field] ||= guess[field]
+      }
+    end
     if guess_metadata
-      rv['Doc.Citations'] ||= guess['Doc.Citations']
-      rv['Doc.Description'] ||= guess['Doc.Description']
-      rv['Doc.ACMCategories'] ||= guess['Doc.ACMCategories']
-      rv['Doc.Keywords'] ||= guess['Doc.Keywords']
+      %w(Doc.Citations Doc.Description Doc.ACMCategories Doc.Keywords
+      ).each{|field|
+        rv[field] ||= guess[field]
+      }
     end
     rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
     rv.delete_if{|k,v| v.nil? }
@@ -358,6 +365,7 @@ extend self
     guess = {}
 
     title = TitleGuesser.guess_title(text)
+    pubdata = PublicationGuesser.guess_pubdata(text)
 
     abstract = remove_ligatures(text).scan(
       /^abstract\s*\n(.+)\n\s*((d+\.)|(\d\.?)*\s*(introduction|[a-z]+))\s*\n/im
@@ -400,6 +408,7 @@ extend self
         "#{cat.upcase} #{ACM_CATEGORIES[cat.upcase]}"
       }
     end
+    guess = guess.merge(pubdata)
     guess
   end
 
@@ -1177,7 +1186,7 @@ extend self
     m['Doc.Source'] = h['source'] || h['ee']
     m['Doc.CiteSeerURL'] = h['identifier']
     m['Doc.Language'] = h['language']
-    m['Doc.PublicationName'] = h['book'] || h['booktitle'] || h['journal']
+    m['Doc.Publication'] = h['book'] || h['booktitle'] || h['journal']
     m['Doc.PublicationPages'] = h['pages']
     m['Doc.Citations'] = h['citations']
     m['Doc.Published'] = parse_time(h['date'] || h['year'])
@@ -1202,7 +1211,7 @@ extend self
     m['Doc.CrossRef'] = h['crossref']
     m['Doc.BibSource'] = h['bibsource']
     m['Doc.Language'] = h['language']
-    m['Doc.PublicationName'] = h['book'] || h['booktitle'] || h['journal']
+    m['Doc.Publication'] = h['book'] || h['booktitle'] || h['journal']
     m['Doc.PublicationPages'] = h['pages']
     m['Doc.Published'] = parse_time(h['date'] || h['year'])
     m['Doc.BibTexType'] = h['bibtex_type']
