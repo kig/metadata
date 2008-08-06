@@ -367,33 +367,36 @@ extend self
     title = TitleGuesser.guess_title(text)
     pubdata = PublicationGuesser.guess_pubdata(text)
 
-    abstract = remove_ligatures(text).scan(
-      /^abstract\s*\n(.+)\n\s*((d+\.)|(\d\.?)*\s*(introduction|[a-z]+))\s*\n/im
+    str = remove_ligatures(text).split(/\f+/m)[0,2].join("\n")
+    abstract = str.scan(
+      /\babstract\s*\n(.+)\n\s*((d+\.)|(\d\.?)*\s*(keywords|categories|introduction|(\d\.?)\s*[a-z]+))\s*\n/im
     ).flatten.first
 
     if abstract
-      kw_re = /\bkeywords:?\b/i
-      cat_re = /\bcategories:?\b/i
-      acm_cat_re = /\b([A-K]\.(\d(\.\d)?)?)\b/
-      kw_list_re = /(([^\.]+,)+[^\.\n]+)/m
-      if abstract =~ cat_re
-        cats = abstract.split(cat_re,2).last.
-                        scan(acm_cat_re).
-                        map{|hit| hit[0] }
-      end
-      if abstract =~ kw_re
-        kws = abstract.split(kw_re)[1..-1].map{|kw|
-                        kw.scan(kw_list_re).flatten.first
-                      }.compact.
-                      map{|hit| hit.split(/\s*,\s*/).map{|s|s.strip} }.
-                      max{|a,b| a.length <=> b.length }
-      end
-      if abstract.size > 1000
+      abstract.gsub!(/\A(\s*[a-z]+@([a-z]+\.)+[a-z]+\s*)+/im, '')
+      if abstract.size > 500
         abstract = abstract.split(/(?=\n)/).inject(""){|s,i|
-          s << i unless s.size > 1000
+          s << i unless s.size > 500
           s
-        } + "\n[...]"
+        }
       end
+    end
+
+    kw_re = /\bkeywords:?\b/i
+    cat_re = /\bcategories:?\b/i
+    acm_cat_re = /\b([A-K]\.(\d(\.\d)?)?)\b/
+    kw_list_re = /(([^\.]+,)+[^\.\n]+)/m
+    if str =~ cat_re
+      cats = str.split(cat_re,2).last.
+                      scan(acm_cat_re).
+                      map{|hit| hit[0] }
+    end
+    if str =~ kw_re
+      kws = str.split(kw_re)[1..-1].map{|kw|
+                      kw.scan(kw_list_re).flatten.first
+                    }.compact.
+                    map{|hit| hit.split(/\s*,\s*/).map{|s|s.strip} }.
+                    max{|a,b| a.length <=> b.length }
     end
 
 #     cites = ReferenceGuesser.guess_references(text)
