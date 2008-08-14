@@ -210,14 +210,26 @@ extend self
   #   Metadata.md5sum = true  # include File.MD5Sum in the metadata
   #   Metadata.include_name = true # include File.Name (file basename)
   #   Metadata.include_path = true # include File.Path (file dirname)
-  #   Metadata.quiet = true   # don't print out Ruby error messages
+  #   Metadata.quiet = true   # override verbose to false
   #   Metadata.verbose = true # print out status messages to stderr
   #
   # All strings are converted to UTF-8.
   #
   def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil, pdf=nil)
+    verbose = verbose && !quiet
     filename = filename.to_s
     mimetype = Mimetype[mimetype] unless mimetype.is_a?( Mimetype )
+    unless File.exist?(filename)
+      rv = {}
+      if self.include_name
+        rv['File.Name'] = enc_utf8(File.basename(filename), nil)
+      end
+      if self.include_path
+        rv['File.Path'] = enc_utf8(File.dirname(filename), nil)
+      end
+      rv['File.Format'] ||= mimetype.to_s
+      return rv
+    end
     mts = mimetype.ancestors
     mt = mts.shift
     rv = nil
@@ -232,7 +244,7 @@ extend self
           STDERR.puts "  OK" if verbose
           break
         rescue => e
-          STDERR.puts(e, e.message, e.backtrace) unless quiet
+          STDERR.puts(e, e.message, e.backtrace) if verbose
         end
       end
       mt = mts.shift
@@ -241,6 +253,13 @@ extend self
       STDERR.puts "  Falling back to extract" if verbose
       rv = extract_extract_info(filename)
     end
+    if self.include_name
+      rv['File.Name'] = enc_utf8(File.basename(filename), nil)
+    end
+    if self.include_path
+      rv['File.Path'] = enc_utf8(File.dirname(filename), nil)
+    end
+    rv['File.Format'] ||= mimetype.to_s
     if File.file?(filename)
       if self.sha1sum
         secure_filename(filename){|sfn|
@@ -253,13 +272,6 @@ extend self
         }
       end
     end
-    if self.include_name
-      rv['File.Name'] = enc_utf8(File.basename(filename), nil)
-    end
-    if self.include_path
-      rv['File.Path'] = enc_utf8(File.dirname(filename), nil)
-    end
-    rv['File.Format'] ||= mimetype.to_s
     rv['File.Size'] = (
       if File.directory?(filename)
         Dir.entries(filename).size-2
