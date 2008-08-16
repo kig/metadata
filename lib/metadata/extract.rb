@@ -308,7 +308,7 @@ extend self
       rv.merge!(dblp_extract(rv['Doc.Title']))
     end
     if guess_metadata or guess_pubdata
-      %w(Doc.Publisher Doc.Published Doc.Publication Event.Name Event.Organizer
+      %w(Doc.Publisher Doc.Published Doc.Publication Doc.Genre Event.Name Event.Organizer
       ).each{|field|
         rv[field] ||= guess[field] if guess[field]
       }
