@@ -26,6 +26,15 @@ extend self
       TOC = "Theory of Computation"
       DM = "Data Management"
       PL = "Programming Languages"
+    GEOPHYS = "Geophysics"
+      EARTHSCI = "Earth Science"
+      HYDROLOGY = "Hydrology"
+      GEOCHEM = "Geochemistry"
+      MINERALOGY = "Mineralogy"
+      GEOLOGY = "Geology"
+      OCEANOGRAPHY = "Oceanography"
+      GLACIOLOGY = "Glaciology"
+      ATMOSPHERE = "Atmospheric Science"
     MEDICINE = "Medicine"
       ALLERGY = "Allergy"
       ANESTHESIOLOGY = "Anesthesiology"
@@ -474,6 +483,142 @@ extend self
     ["CHI Letters", [Genres::CHI]],
     [/\bLNCS|Lecture Notes in Computer Science\b/, "Lecture Notes in Computer Science", []]
   ].map{|a| a[-1] = [Genres::CS]+a[-1]; a }))
+
+  # Earth and atmospheric sciences
+  JOURNALS.push(*( [
+    ["Eos", []],
+    ["Geophysical Research Letters", []],
+    ["Nature Geoscience", []],
+    ["Episodes", []],
+    ["Geophysics", []],
+    ["Journal of Geophysical Research", []],
+    ["Reviews of Geophysics", []],
+  ].map{|a| a[-1] = [Genres::GEOPHYS]+a[-1]; a }))
+  # Earth Science
+  JOURNALS.push(*( [
+    ["Journal of Earth System Science", []],
+
+    ["American Journal of Science", []],
+    ["Canadian Journal of Earth Science", []],
+    ["Earth and Planetary Science Letters", []],
+    ["Earth in Space", []],
+    ["Earth Interactions", []],
+    ["Earth-Science Reviews", []],
+    ["Global Environmental Change", []],
+    ["International Journal of Remote Sensing", []]
+  ].map{|a| a[-1] = [Genres::EARTHSCI]+a[-1]; a }))
+  # Hydrology
+  JOURNALS.push(*( [
+    ["Advances in Water Resources", []],
+    ["Journal of Hydrology", []],
+    ["Water Resources Research", []],
+  ].map{|a| a[-1] = [Genres::HYDROLOGY]+a[-1]; a }))
+  # Geochemistry and Mineralogy
+  JOURNALS.push(*( [
+    ["American Mineralogist", []],
+    ["Applied Geochemistry", []],
+    ["Canadian Mineralogist", []],
+    ["Chemical Geology", []],
+    ["Clays and Clay Minerals", []],
+    ["Geochemical Transactions", []],
+    ["Geochimica et Cosmochimica Acta", []],
+    ["Geomicrobiology Journal", []],
+    ["Mineralogical Magazine", []],
+    ["Organic Geochemistry", []],
+    ["Physics and Chemistry of Minerals", []],
+    ["Reviews in Mineralogy & Geochemistry", []],
+  ].map{|a| a[-1] = [Genres::GEOCHEM, Genres::MINERALOGY]+a[-1]; a }))
+  # Geology
+  JOURNALS.push(*( [
+    ["Bulletin of Volcanology", []],
+    ["Canadian Mineralogist", []],
+    ["Geodinamica Acta", []],
+    ["Geofluids", []],
+    ["Geological Journal", []],
+    ["Geology", []],
+    ["Geomorphology", []],
+    ["Holocene", []],
+    ["International Journal of Speleology", []],
+    ["Journal of Geology", []],
+    ["Journal of Metamorphic Geology", []],
+    ["Journal of Sedimentary Research", []],
+    ["Journal of Structural Geology", []],
+    ["Journal of the Geological Society", []],
+    ["Journal of Volcanology and Geothermal Research", []],
+    ["Lithos", []],
+    ["Northeastern Geology", []],
+    ["Oil and Gas Journal", []],
+    ["Palaios", []],
+    ["Sedimentary Geology", []],
+    ["Sedimentary Petrolology", []],
+    ["Sedimentology", []]
+  ].map{|a| a[-1] = [Genres::GEOLOGY]+a[-1]; a }))
+  # Oceanography
+  JOURNALS.push(*( [
+    ["Atmosphere-Ocean", []],
+    ["Deep-Sea Research Part I", []],
+    ["Deep-Sea Research Part II", []],
+    ["Journal of Geophysical Research- Atmosphere", []],
+    ["Journal of Geophysical Research- Planets", []],
+    ["Journal of Geophysical Research- Solids", []],
+    ["Journal of Physical Oceanography", []],
+    ["Limnology & Oceanography", []],
+    ["Marine Chemistry", []],
+    ["Marine Geology", []],
+    ["Netherlands Journal of Sea Research", []],
+    ["Oceanography & Marine Biology", []],
+    ["Paleoceanography", []],
+    ["Progress in Oceanography", []],
+    ["Reviews in Aquatic Sciences", []]
+  ].map{|a| a[-1] = [Genres::OCEANOGRAPHY]+a[-1]; a }))
+  # Glaciology
+  JOURNALS.push(*( [
+    ["Journal of Glaciology", []],
+    ["Annals of Glaciology", []]
+  ].map{|a| a[-1] = [Genres::GLACIOLOGY]+a[-1]; a }))
+  # Atmospheric Science
+  JOURNALS.push(*( [
+    ["Aerobiologica", []],
+    ["Agricultural and Forest Meteorology", []],
+    ["Atmosphere-Ocean", []],
+    ["Atmospheric and Oceanic Physics", []],
+    ["Atmospheric Chemistry and Physics", []],
+    ["Atmospheric Environment", []],
+    ["Atmospheric Research", []],
+    ["Atmospheric Science Letters", []],
+    ["Boundary-Layer Meteorology", []],
+    ["Bulletin of the American Meteorological Society", []],
+    ["Climate Dynamics", []],
+    ["Climatic Change", []],
+    ["Contributions to Atmospheric Physics", []],
+    ["Electronic Journal of Operational Meteorology", []],
+    ["Electronic Journal of Severe Storms Meteorology", []],
+    ["International Journal of Biometeorology", []],
+    ["International Journal of Climatology", []],
+    ["Journal of Applied Meteorology and Climatology", []],
+    ["Journal of Atmospheric and Oceanic Technology", []],
+    ["Journal of Atmospheric and Solar-terrestrial Physics", []],
+    ["Journal of Atmospheric Chemistry", []],
+    ["Journal of Climate and Applied Meteorology", []],
+    ["Journal of Climate", []],
+    ["Journal of Hydrometeorology", []],
+    ["Journal of the Atmospheric Sciences", []],
+    ["Journal of the Meteorological Society of Japan", []],
+    ["Journal of Meteorology", []],
+    ["Journal of Paleoclimatology", []],
+    ["Meteorological Applications", []],
+    ["Meteorological Monographs", []],
+    ["Meteorology and Atmospheric Physics", []],
+    ["Monthly Weather Review", []],
+    ["Progress in Biometeorology", []],
+    ["Quarterly Journal of the Royal Meteorological Society", []],
+    ["National Weather Digest", []],
+    ["Tellus. Series A: Dynamic Meteorology and Oceanography", []],
+    ["Tellus. Series B: Chemical and Physical Meteorology", []],
+    ["Weather and Forecasting", []],
+    [/\bWeather\s+\(?Royal Met(\.|eorological) Soc(\.|iety)/, "Weather", []]
+  ].map{|a| a[-1] = [Genres::ATMOSPHERE]+a[-1]; a }))
+
 
   # Medicine
   JOURNALS.push(*( [
