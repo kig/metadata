@@ -4,7 +4,7 @@ module Metadata
 module PublicationGuesser
 extend self
 
-  module Genres
+  module Topics
     SCIENCE = "Science"
     ASTRO = "Astronomy"
     ASTROPHYS = "Astrophysics"
@@ -26,6 +26,12 @@ extend self
       TOC = "Theory of Computation"
       DM = "Data Management"
       PL = "Programming Languages"
+    ENG = "Engineering"
+      BIOMED = "Biomedical Engineering"
+      CHEMENG = "Chemical Engineering"
+      ENVENG = "Environmental Engineering"
+      ELEENG = "Electrical Engineering"
+      HYDENG = "Hydrologic Engineering"
     GEOPHYS = "Geophysics"
       EARTHSCI = "Earth Science"
       HYDROLOGY = "Hydrology"
@@ -35,6 +41,7 @@ extend self
       OCEANOGRAPHY = "Oceanography"
       GLACIOLOGY = "Glaciology"
       ATMOSPHERE = "Atmospheric Science"
+    MATH = "Mathematics"
     MEDICINE = "Medicine"
       ALLERGY = "Allergy"
       ANESTHESIOLOGY = "Anesthesiology"
@@ -55,6 +62,7 @@ extend self
       BIOPHYS = "Biological Physics"
       STATPHYS = "Statistical Physics"
       THEOPHYS = "Theoretical Physics"
+    STATISTICS = "Statistics"
   end
 
   JOURNALS = []
@@ -86,7 +94,7 @@ extend self
     ["Revista Mexicana de Astronomia y Astrofisica", []],
     ["Space Journal", []],
     ["Vistas in Astronomy", []]
-  ].map{|a| a[-1] = [Genres::ASTRO, Genres::ASTROPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::ASTRO, Topics::ASTROPHYS]+a[-1]; a }))
 
   # Biology
   JOURNALS.push(*( [
@@ -166,7 +174,7 @@ extend self
     ["Trends in Ecology and Evolution", []],
     ["Trends in Genetics", []],
     ["Wetlands", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY]+a[-1]; a }))
   # Agriculture
   JOURNALS.push(*( [
     ["Animal Production", []],
@@ -183,7 +191,7 @@ extend self
     ["Livestock Science", []],
     ["Poultry Science", []],
     ["Worlds Poultry Science Journal", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::AGRICULTURE]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::AGRICULTURE]+a[-1]; a }))
   # Anatomy
   JOURNALS.push(*( [
     ["Advances in Anatomy, Embryology and Cell Biology", []],
@@ -200,7 +208,7 @@ extend self
     ["Microscopy Research and Technique", []],
     ["Virchows Archiv - A", []],
     ["Zoomorphology", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::ANATOMY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::ANATOMY]+a[-1]; a }))
   # Biochemistry
   JOURNALS.push(*( [
     ["Annual Review of Biochemistry", []],
@@ -218,7 +226,7 @@ extend self
     ["Molecular and Cellular Biochemistry", []],
     ["Nucleic Acids Research", []],
     ["Trends in Biochemistry", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::BIOCHEM]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::BIOCHEM]+a[-1]; a }))
   # Bioinformatics
   JOURNALS.push(*( [
     ["Applied Bioinformatics", []],
@@ -226,7 +234,7 @@ extend self
     ["Briefings in Bioinformatics", []],
     ["Cancer Informatics", []],
     ["Evolutionary Bioinformatics", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::BIOINFO]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::BIOINFO]+a[-1]; a }))
   # Biophysics
   JOURNALS.push(*( [
     ["Annual Review of Biophysics and Biomolecular Structure", []],
@@ -238,14 +246,14 @@ extend self
     ["Progress in Biophysics & Molecular Biology", []],
     ["Quarterly Reviews in Biophysics", []],
     ["Structure", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::BIOPHYSICS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::BIOPHYSICS]+a[-1]; a }))
   # Neuroscience
   JOURNALS.push(*( [
     ["Genes, Brain and Behavior", []],
     ["Nature Reviews Neuroscience", []],
     ["Neurogenetics", []],
     ["Neuron", []],
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::NEUROSCI]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::NEUROSCI]+a[-1]; a }))
   # Virology
   JOURNALS.push(*( [
     ["Acta Virologica", []],
@@ -280,7 +288,7 @@ extend self
     ["Virology Journal", []],
     ["Virus Genes", []],
     ["Virus Research", []]
-  ].map{|a| a[-1] = [Genres::BIOLOGY, Genres::VIROLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::BIOLOGY, Topics::VIROLOGY]+a[-1]; a }))
 
 
   # Chemistry
@@ -465,7 +473,7 @@ extend self
     ["Tetrahedron Letters", []],
     ["Theoretical Chemistry Accounts", []],
     ["Zeitschrift für Physikalische Chemie", []]
-  ].map{|a| a[-1] = [Genres::CHEMISTRY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::CHEMISTRY]+a[-1]; a }))
 
   # Computer science
   JOURNALS.push(*( [
@@ -474,15 +482,15 @@ extend self
     ["Computing Reviews", []],
     ["IEEE Transactions on Computers", []],
     ["International Journal of Critical Computer-Based Systems", []],
-    ["Journal of Machine Learning Research", [Genres::ML]],
-    ["Journal of Functional Programming", [Genres::FP]],
+    ["Journal of Machine Learning Research", [Topics::ML]],
+    ["Journal of Functional Programming", [Topics::FP]],
     ["SIAM Journal on Computing[", []],
     ["IEEE Computer", []],
-    ["ACM Transactions on Graphics", [Genres::GFX]],
-    ["ACM Transactions on Computer-Human Interaction", [Genres::CHI]],
-    ["CHI Letters", [Genres::CHI]],
+    ["ACM Transactions on Graphics", [Topics::GFX]],
+    ["ACM Transactions on Computer-Human Interaction", [Topics::CHI]],
+    ["CHI Letters", [Topics::CHI]],
     [/\bLNCS|Lecture Notes in Computer Science\b/, "Lecture Notes in Computer Science", []]
-  ].map{|a| a[-1] = [Genres::CS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::CS]+a[-1]; a }))
 
   # Earth and atmospheric sciences
   JOURNALS.push(*( [
@@ -493,7 +501,7 @@ extend self
     ["Geophysics", []],
     ["Journal of Geophysical Research", []],
     ["Reviews of Geophysics", []],
-  ].map{|a| a[-1] = [Genres::GEOPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::GEOPHYS]+a[-1]; a }))
   # Earth Science
   JOURNALS.push(*( [
     ["Journal of Earth System Science", []],
@@ -506,13 +514,13 @@ extend self
     ["Earth-Science Reviews", []],
     ["Global Environmental Change", []],
     ["International Journal of Remote Sensing", []]
-  ].map{|a| a[-1] = [Genres::EARTHSCI]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::EARTHSCI]+a[-1]; a }))
   # Hydrology
   JOURNALS.push(*( [
     ["Advances in Water Resources", []],
     ["Journal of Hydrology", []],
     ["Water Resources Research", []],
-  ].map{|a| a[-1] = [Genres::HYDROLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::HYDROLOGY]+a[-1]; a }))
   # Geochemistry and Mineralogy
   JOURNALS.push(*( [
     ["American Mineralogist", []],
@@ -527,7 +535,7 @@ extend self
     ["Organic Geochemistry", []],
     ["Physics and Chemistry of Minerals", []],
     ["Reviews in Mineralogy & Geochemistry", []],
-  ].map{|a| a[-1] = [Genres::GEOCHEM, Genres::MINERALOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::GEOCHEM, Topics::MINERALOGY]+a[-1]; a }))
   # Geology
   JOURNALS.push(*( [
     ["Bulletin of Volcanology", []],
@@ -552,7 +560,7 @@ extend self
     ["Sedimentary Geology", []],
     ["Sedimentary Petrolology", []],
     ["Sedimentology", []]
-  ].map{|a| a[-1] = [Genres::GEOLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::GEOLOGY]+a[-1]; a }))
   # Oceanography
   JOURNALS.push(*( [
     ["Atmosphere-Ocean", []],
@@ -570,12 +578,12 @@ extend self
     ["Paleoceanography", []],
     ["Progress in Oceanography", []],
     ["Reviews in Aquatic Sciences", []]
-  ].map{|a| a[-1] = [Genres::OCEANOGRAPHY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::OCEANOGRAPHY]+a[-1]; a }))
   # Glaciology
   JOURNALS.push(*( [
     ["Journal of Glaciology", []],
     ["Annals of Glaciology", []]
-  ].map{|a| a[-1] = [Genres::GLACIOLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::GLACIOLOGY]+a[-1]; a }))
   # Atmospheric Science
   JOURNALS.push(*( [
     ["Aerobiologica", []],
@@ -617,8 +625,212 @@ extend self
     ["Tellus. Series B: Chemical and Physical Meteorology", []],
     ["Weather and Forecasting", []],
     [/\bWeather\s+\(?Royal Met(\.|eorological) Soc(\.|iety)/, "Weather", []]
-  ].map{|a| a[-1] = [Genres::ATMOSPHERE]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::ATMOSPHERE]+a[-1]; a }))
 
+  # Engineering
+  JOURNALS.push(*( [
+    ["Advances in Production Engineering & Management", []],
+    ["Annual Review of Biomedical Engineering", [Topics::BIOMED]],
+    ["Fluid Phase Equilibria", []],
+    ["Industrial & Engineering Chemistry Research", [Topics::CHEMENG]],
+    ["Journal of Environmental Engineering", [Topics::ENVENG]],
+    ["Journal of Hydrologic Engineering", [Topics::HYDENG]],
+    ["Journal of the IEST", []],
+    ["NASA Tech Briefs", []],
+    ["Post Office Electrical Engineers' Journal", [Topics::ELEENG]]
+  ].map{|a| a[-1] = [Topics::ENG]+a[-1]; a }))
+
+  # Materials science
+  JOURNALS.push(*( [
+    ["Advanced Materials", []],
+    ["Advanced Functional Materials", []],
+    ["JOM", []],
+    ["Journal of Electronic Materials", []],
+    ["Materials Today", []],
+    ["Metallurgical and Materials Transactions", []],
+    ["Nature Materials", []]
+  ].map{|a| a[-1] = [Topics::MATERIALS]+a[-1]; a }))
+
+  # Mathematics
+  JOURNALS.push(*( [
+    ["Acta Mathematica Academiae Paedagogicae Nyíregyháziensis", []],
+    ["Acta Mathematica Universitatis Comenianae", []],
+    ["Acta Mathematica", []],
+    ["Acta Numerica", []],
+    ["Acta Scientiarum Mathematicarum", []],
+    ["Advances in Applied Mathematics", []],
+    ["Advances in Difference Equations", []],
+    ["Advances in Geometry", []],
+    ["Advances in Mathematics", []],
+    ["Advances in Theoretical and Mathematical Physics", []],
+    ["Algebra & Number Theory", []],
+    ["Algebraic & Geometric Topology", []],
+    ["American Journal of Mathematics", []],
+    ["American Mathematical Monthly", []],
+    ["Analysis & PDE", []],
+    ["Annales Academiae Scientiarum Fennicae. Mathematica", []],
+    ["Annales Henri Poincaré", []],
+    ["Annales Scientifiques de l'École Normale Supérieure", []],
+    ["Annali della Scuola Normale Superiore di Pisa - Classe di Scienze", []],
+    ["Annals of Mathematics", []],
+    ["Annals of Mathematical Statistics", []],
+    ["Applied Mathematics E - Notes", []],
+    ["Applied Sciences", []],
+    ["Archive for Rational Mechanics and Analysis", []],
+    ["Archivum Mathematicum", []],
+    ["Asian journal of mathematics", []],
+    ["Atti dell'Accademia Peloritana dei Pericolanti - Classe di Scienze Fisiche, Matematiche e Naturali", []],
+    ["Balkan Journal of Geometry and Its Applications", []],
+    ["Banach Journal of Mathematical Analysis", []],
+    ["Boletin Asociacio Matematica Vanezolana", []],
+    ["Boundary Value Problems", []],
+    ["Brazilian Journal of Probability and Statistics", []],
+    ["Bulletin of TICMI", []],
+    ["Bulletin of the American Mathematical Society", []],
+    ["Bulletin of the London Mathematical Society", []],
+    ["Bulletin, Classes des Sciences Mathematiques et Naturelles, Sciences", []],
+    ["Bulletin of Statistics & Economics", []],
+    ["Canadian Mathematical Bulletin", []],
+    ["Canadian Journal of Mathematics", []],
+    ["Combinatorics, Probability and Computing", []],
+    ["Commentarii Mathematici Helvetici", []],
+    ["Communications in Algebra", []],
+    ["Communications in Mathematical Analysis", []],
+    ["Communications in Mathematical Physics", []],
+    ["Communications on Pure and Applied Mathematics", []],
+    ["Compositio Mathematica", []],
+    ["Computational and Applied Mathematics", []],
+    ["Differential Equations and Control Processes", []],
+    ["Differential Equations and Nonlinear Mechanics", []],
+    ["Differential Geometry - Dynamical systems", []],
+    ["Discrete Dynamics in Nature and Society", []],
+    ["Discrete Mathematics & Theoretical Computer Science", []],
+    ["Divulgaciones Matematicas", []],
+    ["Documenta Mathematica", []],
+    ["Duke Mathematical Journal", []],
+    ["Electronic Journal of Combinatorics", []],
+    ["Electronic Journal of Linear Algebra", []],
+    ["Electronic Journal of Qualitative Theory of Differential Equations", []],
+    ["Electronic Research Announcements of the American Mathematical Society", []],
+    ["Electronic Transactions on Numerical Analysis", []],
+    ["Ergodic Theory and Dynamical Systems", []],
+    ["European Journal of Applied Mathematics", []],
+    ["Far East Journal of Mathematical Sciences", []],
+    ["Fibonacci Quarterly", []],
+    ["Filomat", []],
+    ["Fixed Point Theory and Applications", []],
+    ["Formalized Mathematics", []],
+    ["Forum Geometricorum: A Journal on Classical Euclidean Geometry", []],
+    ["Fundamenta Mathematicae", []],
+    ["Geometry & Topology", []],
+    ["Glasgow Mathematical Journal", []],
+    ["Glasnik Matematicki", []],
+    ["Hiroshima Mathematical Journal", []],
+    ["Homology, Homotopy and Applications", []],
+    ["Indiana University Mathematics Journal", []],
+    ["Integers: Electronic Journal of Combinatorial Number Theory", []],
+    ["Integral Equations and Operator Theory", []],
+    ["InterJournal", []],
+    ["Interdisciplinary Information Sciences", []],
+    ["International Journal for Mathematics Teaching and Learning", []],
+    ["International Journal of Applied Mathematics and Computer Science", []],
+    ["International Journal of Applied Mathematics & Statistics", []],
+    ["International Journal of Intelligent Technologies and Applied Statistics", []],
+    ["International Journal of Mathematics", []],
+    ["International Journal of Mathematics and Statistics", []],
+    ["International journal of simulation. Systems, science and technology", []],
+    ["International Journal of Tomography and Statistics", []],
+    ["Inventiones Mathematicae", []],
+    ["Involve, a Journal of Mathematics", []],
+    ["Journal de Mathématiques Pures et Appliquées", []],
+    ["Journal für die reine und angewandte Mathematik - the oldest surviving mathematical periodical", []],
+    ["Journal of Algebra", []],
+    ["Journal of Applied Mathematics", []],
+    ["Journal of the Australian Mathematical Society", []],
+    ["Journal of Commutative Algebra", []],
+    ["Journal of Differential Geometry", []],
+    ["Journal of Fluid Mechanics", []],
+    ["Journal of Functional Analysis", []],
+    ["Journal of Geometry", []],
+    ["Journal of Graph Algorithms and Applications", []],
+    ["Journal of Inequalities in Pure and Applied Mathematics", []],
+    ["Journal of Integer Sequences", []],
+    ["Journal of Mathematical Physics", []],
+    ["Journal of Mathematical Sciences", []],
+    ["Journal of Mathematics and Statistics", []],
+    ["Journal of Nonlinear Mathematical Physics", []],
+    ["Journal of Number Theory", []],
+    ["Journal of Online Mathematics and its Applications", []],
+    ["Journal of Operator Theory", []],
+    ["Journal of Pure and Applied Algebra", []],
+    ["Journal of the American Mathematical Society", []],
+    ["Journal of the London Mathematical Society", []],
+    ["Journal of the Institute of Mathematics of Jussieu", []],
+    ["Kyungpook Mathematical Journal", []],
+    ["Kyushu Journal of Mathematics", []],
+    ["Lobachevskii Journal of Mathematics", []],
+    ["Manuscripta Mathematica", []],
+    ["Matematicki Vesnik", []],
+    ["Mathematica Scandinavica", []],
+    ["Mathematical Inequalities & Applications", []],
+    ["Mathematical Journal of Okayama University", []],
+    ["Mathematical Physics Electronic Journal", []],
+    ["Mathematical Problems in Engineering", []],
+    ["Mathematical Proceedings of the Cambridge Philosophical Society", []],
+    ["Mathematical Structures in Computer Science", []],
+    ["Mathematics of Computation", []],
+    ["Mathematische Annalen", []],
+    ["Mathematische Nachrichten", []],
+    ["Mathematische Zeitschrift", []],
+    ["Missouri Journal of Mathematical Sciences", []],
+    ["Multiscale Modeling and Simulation", []],
+    ["Nagoya Mathematical Journal", []],
+    ["Nexus Network Journal: architecture and mathematics", []],
+    ["Notices of the American Mathematical Society", []],
+    ["Pacific Journal of Mathematics", []],
+    ["Proceedings of Symposia in Pure Mathematics", []],
+    ["Proceedings of the American Mathematical Society", []],
+    ["Proceedings of the Edinburgh Mathematical Society", []],
+    ["Proceedings of the Indian Academy of Sciences: Mathematical Sciences", []],
+    ["Proceedings of the Japan Academy. Series A, Mathematical Sciences", []],
+    ["Proceedings of the Royal Society of Edinburgh: Section A Mathematics", []],
+    ["Proyecciones- Revista de matemetica", []],
+    ["Publications Mathematiques de l'IHES", []],
+    ["Publications de l'Institut Mathematique", []],
+    ["Quaestiones Mathematicae", []],
+    ["Rendiconti del Seminario Matematico della Università e Politecnico di Torino", []],
+    ["Rendiconti del Seminario Matematico della Università di Padova", []],
+    ["Ricerche di Matematica", []],
+    ["SIAM Journal on Applied Dynamical Systems", []],
+    ["SIAM Journal on Applied Mathematics", []],
+    ["SIAM Journal on Computing", []],
+    ["SIAM Journal on Control and Optimization", []],
+    ["SIAM Journal on Discrete Mathematics", []],
+    ["SIAM Journal on Mathematical Analysis", []],
+    ["SIAM Journal on Matrix Analysis and Applications", []],
+    ["SIAM Journal on Numerical Analysis", []],
+    ["SIAM Journal on Optimization", []],
+    ["SIAM Journal on Scientific Computing", []],
+    ["SIAM Review", []],
+    ["Seminaire Lotharingien de Combinatoire", []],
+    ["Siberian Electronic Mathematical Reports", []],
+    ["Siberian Mathematical Journal", []],
+    ["Solstice : An Electronic Journal of Geography and Mathematics", []],
+    ["Southwest Journal of Pure and Applied Mathematics", []],
+    ["Studia Mathematica", []],
+    ["Symmetry, Integrability and Geometry: Methods and Applications", []],
+    ["Taiwanese Journal of Mathematics, TJM", []],
+    ["The Electronic Journal of Combinatorics", []],
+    ["The Mathematics Educator", []],
+    ["The Montana Mathematics Enthusiast", []],
+    ["The New York Journal of Mathematics", []],
+    ["Theory and Applications of Categories", []],
+    ["Theory of Probability and Its Applications", []],
+    ["Topology", []],
+    ["Topology and its Applications", []],
+    ["Transactions of the American Mathematical Society", []],
+    ["Turkish Journal of Mathematics", []]
+  ].map{|a| a[-1] = [Topics::MATH]+a[-1]; a }))
 
   # Medicine
   JOURNALS.push(*( [
@@ -1004,7 +1216,7 @@ extend self
     ["Tissue Engineering and Regenerative Medicine", []],
     ["Trends in Molecular Medicine", []],
     ["Trillium Report", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE]+a[-1]; a }))
   # Allergy
   JOURNALS.push(*( [
     ["Journal of Allergy Clinical Immunology", []],
@@ -1019,7 +1231,7 @@ extend self
     ["Allergy Asthma Proceedings", []],
     ["Annals of Allergy", []],
     ["European Journal of Allergy & Clinical Immunology", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE, Genres::ALLERGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE, Topics::ALLERGY]+a[-1]; a }))
   # Anesthesiology
   JOURNALS.push(*( [
     ["Pain", []],
@@ -1035,7 +1247,7 @@ extend self
     ["International Anesthesiology Clinics", []],
     ["Journal of Clinical Monitoring", []],
     ["Le Practicien en Anesthésie Réanimation", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE, Genres::ANESTHESIOLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE, Topics::ANESTHESIOLOGY]+a[-1]; a }))
   # Pharmaceutical Sciences
   JOURNALS.push(*( [
     ["Biopharmaceutics & Drug Disposition", []],
@@ -1075,7 +1287,7 @@ extend self
     ["Pharmaceuticals", []],
     ["South African Pharmaceutical Journal", []],
     ["Tropical Journal of Pharmaceutical Research", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE, Genres::PHARSCI]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE, Topics::PHARSCI]+a[-1]; a }))
   # Psychiatry
   JOURNALS.push(*( [
     ["Archives of General Psychiatry", []],
@@ -1088,12 +1300,12 @@ extend self
     ["Journal of Clinical Psychiatry", []],
     ["Neuropsychopharmacology", []],
     ["Sleep", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE, Genres::PSYCHIATRY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE, Topics::PSYCHIATRY]+a[-1]; a }))
   # Toxicology
   JOURNALS.push(*( [
     ["Toxicology", []],
     ["The Journal of Toxicological Sciences", []]
-  ].map{|a| a[-1] = [Genres::MEDICINE, Genres::TOXICOLOGY]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::MEDICINE, Topics::TOXICOLOGY]+a[-1]; a }))
 
   # Physics (general)
   JOURNALS.push(*( [
@@ -1125,8 +1337,7 @@ extend self
     ["Reviews of Modern Physics", []],
     ["Technical Physics", []],
     ["Uspekhi Fizicheskikh Nauk", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS]+a[-1]; a }))
-
+  ].map{|a| a[-1] = [Topics::PHYSICS]+a[-1]; a }))
   # Acoustics
   JOURNALS.push(*( [
     ["Ultrasound in Obstetrics & Gynecology", []],
@@ -1141,14 +1352,14 @@ extend self
     ["Phonetica", []],
     ["Wave Motion", []],
     ["Technical Acoustics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::ACOUSTICS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::ACOUSTICS]+a[-1]; a }))
   # Atomic and molecular physics
   JOURNALS.push(*( [
     ["Physical Review A", []],
     ["European Physical Journal D", []],
     ["Journal of Physics B", []],
     ["Laser Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS]+a[-1]; a }))
   # Plasma physics
   JOURNALS.push(*( [
     ["IEEE Transactions on Plasma Science", []],
@@ -1158,13 +1369,13 @@ extend self
     ["Physics of Plasmas", []],
     ["Plasma Sources Science and Technology", []],
     ["Plasma Science and Technology", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::PLASMA]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::PLASMA]+a[-1]; a }))
   # Measurement
   JOURNALS.push(*( [
     ["Measurement Science and Technology", []],
     ["Metrologia", []],
     ["Review of Scientific Instruments", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::MEASUREMENT]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::MEASUREMENT]+a[-1]; a }))
   # Nuclear physics
   JOURNALS.push(*( [
     ["Physical Review C", []],
@@ -1174,7 +1385,7 @@ extend self
     ["Nuclear Instruments and Methods in Physics Research", []],
     ["European Physical Journal A", []],
     ["Journal of Physics G", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::NUCLEAR]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::NUCLEAR]+a[-1]; a }))
   # Optics
   JOURNALS.push(*( [
     ["Advances in Atomic, Molecular, and Optical Physics", []],
@@ -1191,7 +1402,7 @@ extend self
     ["Journal of the Optical Society of America B", []],
     ["Progress in Optics", []],
     ["Nature Photonics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::OPTICS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::OPTICS]+a[-1]; a }))
   # Condensed Matter and Materials Science
   JOURNALS.push(*( [
     ["Applied Physics A", []],
@@ -1214,26 +1425,26 @@ extend self
     ["Semiconductors", []],
     ["Solid State Communications", []],
     ["Synthetic Metals", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::MATERIALS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::MATERIALS]+a[-1]; a }))
   # Low Temperature Physics
   JOURNALS.push(*( [
     ["Journal of Low Temperature Physics", []],
     ["Low Temperature Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::LOWTEMP]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::LOWTEMP]+a[-1]; a }))
   # Chemical Physics
   JOURNALS.push(*( [
     ["Chemical Physics Letters", []],
     ["Chemical Physics", []],
     ["Journal of Chemical Physics", []],
     ["Physical Chemistry Chemical Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::CHEMPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::CHEMPHYS]+a[-1]; a }))
   # Soft Matter Physics
   JOURNALS.push(*( [
     ["Granular Matter", []],
     ["Journal of Polymer Science B: Polymer Physics", []],
     ["Soft Matter", []],
     ["European Physical Journal E", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::SOFTMATPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::SOFTMATPHYS]+a[-1]; a }))
   # Medical Physics
   JOURNALS.push(*( [
     ["Medical Physics", []],
@@ -1241,21 +1452,21 @@ extend self
     ["Journal of Applied Clinical Medical Physics", []],
     ["Radiotherapy and Oncology", []],
     ["International Journal of Radiation Oncology Biology Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::MEDPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::MEDPHYS]+a[-1]; a }))
   # Biological Physics
   JOURNALS.push(*( [
     ["Biophysical Journal", []],
     ["Biophysics", []],
     ["European Biophysics Journal", []],
     ["Journal of Biological Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::BIOPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::BIOPHYS]+a[-1]; a }))
   # Statistical and Nonlinear Physics
   JOURNALS.push(*( [
     ["Physica A", []],
     ["Journal of Statistical Physics", []],
     ["Journal of Statistical Mechanics", []],
     ["Chaos", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::STATPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::STATPHYS]+a[-1]; a }))
   # Theoretical Physics
   JOURNALS.push(*( [
     ["Advances in Theoretical and Mathematical Physics", []],
@@ -1267,7 +1478,42 @@ extend self
     ["International Journal of Modern Physics A", []],
     ["Nuclear Physics B", []],
     ["Theoretical and Mathematical Physics", []]
-  ].map{|a| a[-1] = [Genres::PHYSICS, Genres::THEOPHYS]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::PHYSICS, Topics::THEOPHYS]+a[-1]; a }))
+
+  # Statistics
+  JOURNALS.push(*( [
+    ["Journal of Agricultural, Biological, and Environmental Statistics", []],
+    ["Journal of the American Statistical Association", []],
+    ["The American Statistician", []],
+    ["Annals of Applied Probability", []],
+    ["Annals of Applied Statistics", []],
+    ["The Annals of Probability", []],
+    ["The Annals of Statistics", []],
+    ["Journal of Applied Econometrics", []],
+    ["Bernoulli", []],
+    ["Biometrics", []],
+    ["Biometrika", []],
+    ["Biostatistics", []],
+    ["Journal of Biopharmaceutical Statistics", []],
+    ["Journal of Business & Economic Statistics", []],
+    ["The Canadian Journal of Statistics", []],
+    ["Clinical Trials: Journal of the Society for Clinical Trials", []],
+    ["Communications in Statistics", []],
+    ["Journal of Computational and Graphical Statistics", []],
+    ["Journal of Econometrics", []],
+    ["Journal of Industrial and Management Optimization", []],
+    ["The International Journal of Biostatistics", []],
+    ["International Journal of Intelligent Technologies and Applied Statistics", []],
+    ["Journal of the Royal Statistical Society", []],
+    ["Statistical Applications in Genetics and Molecular Biology", []],
+    ["Statistical Science", []],
+    ["Statistics in Medicine", []],
+    ["Statistics in Biopharmaceutical Research", []],
+    ["Journal of Statistical Software", []],
+    ["Technology Innovations in Statistics Education", []],
+    ["Technometrics", []],
+    ["Journal of Time Series Analysis", []]
+  ].map{|a| a[-1] = [Topics::STATISTICS]+a[-1]; a }))
 
 
   # Science
@@ -1277,40 +1523,40 @@ extend self
     ["Proceedings of the Royal Society", []],
     ["Nature", []],
     ["Science", []]
-  ].map{|a| a[-1] = [Genres::SCIENCE]+a[-1]; a }))
+  ].map{|a| a[-1] = [Topics::SCIENCE]+a[-1]; a }))
 
-  PUBLICATIONS = JOURNALS.map{|pattern,name,genres|
-    unless genres
-      genres = name
+  PUBLICATIONS = JOURNALS.map{|pattern,name,topics|
+    unless topics
+      topics = name
       name = pattern
       pattern = /\b#{Regexp.escape(name)}\b/
     end
-    [pattern, name, genres]
+    [pattern, name, topics]
   }.sort_by{|p,n,g|
     [TitleGuesser::WORDS[n.strip.downcase] ? 1 : 0, -n.length, -g.length]
   }
   # Sort by length, descending. Non-words first.
-  # If many have same name, put ones with most genres first.
+  # If many have same name, put ones with most topics first.
 
   SIG_CONFERENCES = [
-    ["ACT", [Genres::ALG, Genres::TOC]],
-    ["CHI", [Genres::CHI]],
-    ["MOD", [Genres::DM]],
-    ["GRAPH", [Genres::GFX]],
-    ["PLAN", [Genres::PL]]
+    ["ACT", [Topics::ALG, Topics::TOC]],
+    ["CHI", [Topics::CHI]],
+    ["MOD", [Topics::DM]],
+    ["GRAPH", [Topics::GFX]],
+    ["PLAN", [Topics::PL]]
   ]
 
   CONFERENCES = SIG_CONFERENCES.map{|s,g|
-    [/\bSIG#{s}\b/, "SIG#{s}", [Genres::CS]+g]
+    [/\bSIG#{s}\b/, "SIG#{s}", [Topics::CS]+g]
   } + [
-    [/\bCHI'\d\d\b/, "SIGCHI", [Genres::CS, Genres::CHI]],
-    [/\bEuroGraphics[^a-zA-Z]/i, "EuroGraphics", [Genres::CS, Genres::GFX]],
-    [/\bICFP[^a-zA-Z]/, "ICFP", [Genres::CS, Genres::FP]],
+    [/\bCHI'\d\d\b/, "SIGCHI", [Topics::CS, Topics::CHI]],
+    [/\bEuroGraphics[^a-zA-Z]/i, "EuroGraphics", [Topics::CS, Topics::GFX]],
+    [/\bICFP[^a-zA-Z]/, "ICFP", [Topics::CS, Topics::FP]],
     [/\bIPTPS[^a-zA-Z]/, "IPTPS"],
     [/\bPEPM[^a-zA-Z]/, "PEPM"],
     [/\bDocEng[^a-zA-Z]/, "DocEng"],
-    [/\bUIST[^a-zA-Z]/, "UIST", [Genres::CS, Genres::CHI]],
-    [/\bInt\. Symp\. on Smart Graphics\b/i, "Int. Symp. on Smart Graphics", [Genres::CS, Genres::GFX]]
+    [/\bUIST[^a-zA-Z]/, "UIST", [Topics::CS, Topics::CHI]],
+    [/\bInt\. Symp\. on Smart Graphics\b/i, "Int. Symp. on Smart Graphics", [Topics::CS, Topics::GFX]]
   ]
 
   def find_publication(str)
