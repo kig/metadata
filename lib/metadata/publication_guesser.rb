@@ -26,6 +26,17 @@ extend self
       TOC = "Theory of Computation"
       DM = "Data Management"
       PL = "Programming Languages"
+      AI = "Artificial Intelligence"
+      COMPLING = "Computational Linguistics"
+      COMPVIS = "Computer Vision"
+      SIGNAL_PROCESSING = "Signal Processing"
+      CHEMINFO = "Cheminformatics"
+      MULTIMEDIA = "Multimedia"
+      CRYPTO = "Cryptography"
+      ONLINE_ENG = "Online Engineering"
+      SYMBCOMP = "Symbolic Computation"
+      SOFTSYS = "Software systems"
+      WEB = "Web information systems"
     ENG = "Engineering"
       BIOMED = "Biomedical Engineering"
       CHEMENG = "Chemical Engineering"
@@ -511,16 +522,67 @@ extend self
 
   # Computer science
   JOURNALS.push(*( [
-    ["Journal of the ACM", []],
-    ["Communications of the ACM", []],
-    ["Computing Reviews", []],
-    ["IEEE Transactions on Computers", []],
-    ["International Journal of Critical Computer-Based Systems", []],
-    ["Journal of Machine Learning Research", [Topics::ML]],
-    ["Journal of Functional Programming", [Topics::FP]],
-    ["SIAM Journal on Computing[", []],
-    ["IEEE Computer", []],
+    ["ACM Computing Reviews", []],
     ["ACM Transactions on Graphics", [Topics::GFX]],
+    ["ACM Transactions on Multimedia Computing, Communications, and Applications", [Topics::MULTIMEDIA]],
+    ["Archives and Museum Informatics", []],
+    ["Artificial Intelligence", [Topics::AI]],
+    ["Bell Labs Technical Journal", []],
+    ["Communications of the ACM", []],
+    ["Computational Linguistics", [Topics::COMPLING]],
+    [/\bComputer\b.{0,10}IEEE/, "Computer", []],
+    ["Computer Graphics", [Topics::GFX]],
+    ["The Computer Journal", []],
+    ["Computer Law and Security Report", []],
+    ["EURASIP Journal on Advances in Signal Processing", [Topics::SIGNAL_PROCESSING]],
+    ["Electronic Letters on Computer Vision and Image Analysis", [Topics::COMPVIS]],
+    ["Electronic Notes in Theoretical Computer Science", [Topics::TOC]],
+    ["Formal Aspects of Computing", []],
+    ["HOOPLA", []],
+    ["ICGA Journal", []],
+    ["IEEE Annals of the History of Computing", []],
+    ["IEEE MultiMedia", []],
+    ["IEEE Software", []],
+    ["IEEE Spectrum", []],
+    ["IEEE Transactions on Computers", []],
+    ["IEEE Transactions on Evolutionary Computation", []],
+    ["IEEE Transactions on Pattern Analysis and Machine Intelligence", []],
+    ["IEEE Transactions on Software Engineering", []],
+    ["iJOE", [Topics::ONLINE_ENG]],
+    ["INFOCOMP Journal of Computer Science", []],
+    ["Innovations in Systems and Software Engineering", []],
+    ["International Journal of Computational Cognition", []],
+    ["International Journal of Critical Computer-Based Systems", []],
+    ["JOT: Journal of Object Technology", []],
+    ["Journal of the ACM", []],
+    ["Journal of Artificial Intelligence Research", [Topics::AI]],
+    ["Journal of Chemical Information and Modeling", [Topics::CHEMINFO]],
+    ["Journal of Cryptology", [Topics::CRYPTO]],
+    ["Journal of Functional Programming", [Topics::FP]],
+    ["Journal of Information Technology & Politics", []],
+    ["Journal of Machine Learning Research", [Topics::ML]],
+    ["Journal of Multimedia", [Topics::MULTIMEDIA]],
+    ["Journal of Statistical Software", [Topics::STATISTICS]],
+    ["Journal of Symbolic Computation", [Topics::SYMBCOMP]],
+    ["Journal of Systems and Software", [Topics::SOFTSYS]],
+    ["Journal of Web Semantics", [Topics::WEB]],
+    ["Kairos: a journal of rhetoric, technology, and pedagogy", []],
+    [/\bLNCS|Lecture Notes in Computer Science\b/, "Lecture Notes in Computer Science", []],
+    ["Logical Methods in Computer Science", []],
+    ["Machine Learning", [Topics::ML]],
+    ["Natural Computing", []],
+    ["QSAR & Combinatorial Science", []],
+    ["RISKS Digest", []],
+    ["Russian IT Quarterly", []],
+    ["SIAM Journal on Computing", []],
+    ["Scientific Computing & Instrumentation", []],
+    ["Software Engineering Notes", []],
+    ["Software and Systems Modeling", []],
+    ["Theoretical Computer Science", [Topics::TOC]],
+    ["Theory of Computing", [Topics::TOC]]
+  ].map{|a| a[-1] = []+a[-1]; a }))
+  JOURNALS.push(*( [
+    ["Computing Reviews", []],
     ["ACM Transactions on Computer-Human Interaction", [Topics::CHI]],
     ["CHI Letters", [Topics::CHI]],
     [/\bLNCS|Lecture Notes in Computer Science\b/, "Lecture Notes in Computer Science", []]
