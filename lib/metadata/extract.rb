@@ -440,6 +440,7 @@ extend self
     si = m.streaminfo
     len = si["total_samples"].to_f / si["samplerate"]
     md = {
+      'Audio.Codec' => 'FLAC',
       'Audio.Title' => enc_utf8(t['TITLE'], charset),
       'Audio.Artist' => enc_utf8(t['ARTIST'], charset),
       'Audio.Album' => enc_utf8(t['ALBUM'], charset),
@@ -476,7 +477,10 @@ extend self
       'Audio.AlbumTrackCount' => parse_num(total, :i),
       'Audio.Writer' => enc_utf8(m.WRT, charset),
       'Audio.Copyright' => enc_utf8(m.CPRT, charset),
-      'Audio.Tempo' => parse_num(m.TMPO, :i)
+      'Audio.Tempo' => parse_num(m.TMPO, :i),
+      'Audio.Codec' => enc_utf8(m.ENCODING, charset),
+      'Audio.AppleID' => enc_utf8(m.APID, charset),
+      'Audio.Image' => base64(m.COVR),
     }
   end
 
@@ -489,6 +493,7 @@ extend self
     t = m.tags
     si = m.info
     md = {
+      'Audio.Codec' => 'Windows Media Audio',
       'Audio.Title' => enc_utf8(t['Title'], charset),
       'Audio.Artist' => enc_utf8(t['Author'], charset),
       'Audio.Album' => enc_utf8(t['AlbumTitle'], charset),
@@ -708,7 +713,7 @@ extend self
     ).each{|t|
       h['Video.'+t] = wma['Audio.'+t]
     }
-    %w(Samplerate).each{|t|
+    %w(Samplerate Codec).each{|t|
       h['Audio.'+t] = wma['Audio.'+t]
     }
     h
@@ -974,6 +979,16 @@ extend self
         hash[v.downcase] = hash[k.sub("name", "value")]
       end
     }
+    f = { 
+      '85' => 'MP3',
+      'fLaC' => 'FLAC',
+      'vrbs' => 'Vorbis',
+      'hwac3' => 'AC3',
+      '1' => 'PCM',
+      '7' => 'Sun Audio',
+      '353' => 'Windows Media Audio'
+    }
+    hash['audio_format'] = f[hash['audio_format']] if f[hash['audio_format']]
     hash
   end
 
