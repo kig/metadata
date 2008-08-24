@@ -3229,7 +3229,7 @@ extend self
     nil
   end
 
-  def find_organizer(str, conf)
+  def find_organizer(str, conf, year)
     nil
   end
 
@@ -3237,20 +3237,17 @@ extend self
     pages = str.strip.split(/\f+/)
     str = Metadata.remove_ligatures( pages.first )
     conference = find_conference(str)
-    organizer = find_organizer(str, conference) if conference
     if conference
       year = find_year(str, conference)
+      organizer = find_organizer(str, conference, year)
       conference = conference.dup
       conference[1] = conference[1] + " #{year}" if year
     end
     if !conference
       publication = find_publication(str)
-    else
-      publication = conference.dup
-      publication[1] = "In Proceedings of " + publication[1]
+      publisher = find_publisher(str, publication)
+      publish_time = find_publish_time(str, publication) if publication
     end
-    publisher = find_publisher(str, publication)
-    publish_time = find_publish_time(str, publication) if publication
     h = {}
     h['Doc.PublishTime'] = Metadata.parse_time(publish_time.to_s) if publish_time
     h['Doc.Publication'] = publication[1] if publication
