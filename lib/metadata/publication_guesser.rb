@@ -21,7 +21,7 @@ extend self
       FP = "Functional Programming"
       ML = "Machine Learning"
       CHI = "Computer-Human Interaction"
-      GFX = "Graphics"
+      GFX = "Computer Graphics"
       ALG = "Algorithms"
       TOC = "Theory of Computation"
       DM = "Data Management"
