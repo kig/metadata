@@ -19,7 +19,7 @@ check("perl", "-e 'use Compress::Zlib'", "libcompress-zlib-perl", 0)
 check("exiftool", "-v", "libimage-exiftool-perl", 0)
 check("extract", "-v", "extract", 0)
 check("html2text", "-help", "html2text", 0)
-check("identify", "-version", "graphicsmagick-imagemagick-compat", 1)
+check("identify", "-version", "imagemagick", 0)
 check("inkscape", "--help", "inkscape", 0)
 check("md5sum", "--help", "coreutils", 0)
 check("mplayer", "-v", "mplayer", 0)
@@ -35,3 +35,4 @@ check("zcat", "-h", "gzip", 0)
 $missing.each{|name, args, pkg| out.puts "Missing package #{pkg} (needed for `#{name} #{args}`)" }
 out.puts "All dependencies found." if $missing.empty?
 
+exit($missing.empty?)
