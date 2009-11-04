@@ -87,8 +87,6 @@ private
     f = File.new(file)
     return if f.read(12) != "MIME-Magic\0\n"
 
-    @max_extents = 0
-
     while buf = f.gets
       # check for new mimetype
       if buf =~ /^\[(\d+):(.*)\]$/
