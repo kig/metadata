@@ -743,8 +743,8 @@ extend self
   end
 
   def image_svg_xml(filename, charset)
-    w = secure_filename(filename){|tfn| `xvfb-run -a inkscape #{tfn} -W` }
-    h = secure_filename(filename){|tfn| `xvfb-run -a inkscape #{tfn} -H` }
+    id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
+    w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
     info = {
       'Image.Width' => parse_num(w, :f),
       'Image.Height' => parse_num(h, :f),
