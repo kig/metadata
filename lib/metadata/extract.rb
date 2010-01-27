@@ -580,7 +580,7 @@ extend self
   def text_html(filename, charset)
     gem_require 'hpricot'
     words = secure_filename(filename){|tfn|
-      `html2text #{tfn} | wc -w 2>/dev/null`
+      `lynx -dump -display_charset=UTF-8 -nolist #{tfn} | wc -w 2>/dev/null`
     }.strip.to_i
     html = (File.read(filename, 65536) || "")
     charset = html.chardet
@@ -821,7 +821,7 @@ extend self
   end
 
   def text_html__gettext(filename, charset, layout=false)
-    enc_utf8(secure_filename(filename){|tfn| `unhtml #{tfn}` }, charset)
+    enc_utf8(secure_filename(filename){|tfn| `lynx -dump -display_charset=UTF-8 -nolist #{tfn}` }, charset)
   end
 
   def application_pdf__gettext(filename, charset, layout=false)
