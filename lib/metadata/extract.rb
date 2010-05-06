@@ -297,7 +297,7 @@ extend self
       gem_require 'metadata/reference_guesser'
       text = (rv['File.Content'] || extract_text(filename, mimetype, charset, false))
       guess = extract_guesses(text)
-      if guess['Doc.Title'] and (rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|((\.(dvi|doc)|WORD)$)|^Slide 1$/)
+      if guess['Doc.Title'] and (rv['Doc.Title'].nil? or rv['Doc.Title'] =~ /(^[a-z])|((\.(dvi|doc)|WORD)$)|^Slide 1$|^PowerPoint Presentation$/)
         rv['Doc.Title'] = guess['Doc.Title']
       end
     end
