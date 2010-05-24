@@ -8,7 +8,7 @@ opts = OptionParser.new do |opts|
   opts.banner = "USAGE: #{$0} [options] filename [filename ...]"
 
   opts.separator ""
-  opts.on("-h", "--help", "Show this message"){ puts opts.help; exit!(0) }
+  opts.on("-h", "--help", "Show this message"){ puts opts.help; exit(0) }
   opts.on("-e", "Extract mdh file"){|p| options[:extract] = true }
   opts.on("-p", "Print metadata to stdout"){|p| options[:print] = true }
   opts.on("-c", "Create mdh file"){|p| options[:create] = true }
@@ -47,7 +47,7 @@ opts = OptionParser.new do |opts|
   opts.on("--path", "Include pathname"){|p| Metadata.include_path = true }
   opts.on("-V", "Print out version number and exit"){|p|
     puts Metadata::VERSION
-    exit!(0)
+    exit(0)
   }
 end
 
@@ -56,14 +56,14 @@ begin
 rescue => e
   STDERR.puts e.message
   STDERR.puts opts.help
-  exit!(1)
+  exit(1)
 end
 
 filenames = ARGV
 
 if filenames.empty?
   STDERR.puts opts.banner
-  exit!(1)
+  exit(1)
 end
 
 filenames.each do |fn|
@@ -74,12 +74,12 @@ filenames.each do |fn|
         mdh_hd = f.read(3)
         if mdh_hd != "MDH"
           STDERR.puts("Not recognized as an MDH file: #{fn}") unless Metadata.quiet
-          exit!(2)
+          exit(2)
         end
         mdh_v = f.read(1)
         if mdh_v != "\x01" and mdh_v != "\x02"
           STDERR.puts("Unrecognized MDH version: #{mdh_v[0]}") unless Metadata.quiet
-          exit!(3)
+          exit(3)
         end
         mdh_sz = f.read(4).unpack("N")[0]
         if options[:print]
