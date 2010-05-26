@@ -85,14 +85,18 @@ public
     rv = (nrv || lmrv || brv)
     if File.exist?(filename)
       ft = Metadata.secure_filename(filename){|tfn|
-        `file -ib #{tfn}`.strip
+        `file -ib #{tfn}`.strip.split(";",2)[0]
       }
-      # if ft and nrv disagree, use lmrv || nrv || ft
-      if nrv and ft != nrv
-        if generic_type?(lmrv)
-          rv = nrv || lmrv || ft
-        else
-          rv = lmrv || nrv || ft
+      if ft == "audio/x-mod"
+        rv = ft
+      else
+        # if ft and nrv disagree, use lmrv || nrv || ft
+        if nrv and ft != nrv
+          if generic_type?(lmrv)
+            rv = nrv || lmrv || ft
+          else
+            rv = lmrv || nrv || ft
+          end
         end
       end
     end
