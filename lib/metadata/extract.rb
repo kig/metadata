@@ -156,6 +156,7 @@ class String
     end
     us ||= self.gsub(/[^0-9a-z._ '"\*\+\-]/,'?')
     us.sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/, '') # strip UTF BOMs
+    us.tr!("\0", "") # strip null bytes
     us
   end
 
