@@ -62,7 +62,9 @@ class String
         cd.write(self[0,65536])
         cd.close_write
       }
-      cd.read.strip
+      # There's a chardet that outputs '<stdin>: ascii (Confidence: 1.00)',
+      # we need to strip out the head and the tail.
+      cd.read.strip.sub(/^[^:]*:\s*/,'').sub(/\s*\(.*/, '')
     }
     if cset == 'None'
       charsets = ['utf-8',
