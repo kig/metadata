@@ -74,59 +74,92 @@ class MimeInfo
 public
   # Runs @checks against the given filename.
   def type(filename)
-    rv = special_node_type(filename)
-    return Mimetype[rv] if rv
-    mrv = default_magic_type(filename)
-    return Mimetype[mrv] if mrv
+    nodetype = special_node_type(filename)
+    return Mimetype[nodetype] if nodetype
+    magic_type = default_magic_type(filename)
+    return Mimetype[magic_type] if magic_type
     # okay, let's guess.
-    lmrv = lesser_magic_type(filename)
-    nrv = type_for_name(filename)
-    brv = text_or_binary(filename)
-    rv = (nrv || lmrv || brv)
+    magic_type = lesser_magic_type(filename)
+    name_type = type_for_name(filename)
+    binary = text_or_binary(filename)
+    mimetype = name_type
+    mimetype = magic_type if very_generic_type?(mimetype)
+    mimetype = binary if mimetype.nil?
     if File.exist?(filename)
-      ft = Metadata.secure_filename(filename){|tfn|
-        `file -ib #{tfn}`.strip.split(";",2)[0]
-      }
-      if ft == "audio/x-mod"
-        rv = ft
-      else
-        # if ft and nrv disagree, use lmrv || nrv || ft
-        if nrv and ft != nrv
-          if generic_type?(lmrv)
-            rv = nrv || lmrv || ft
-          else
-            rv = lmrv || nrv || ft
-          end
-        end
+      file_type = `file -ib -- '#{filename.gsub("'", "'\\\\''")}'`.strip
+      file_type = file_type.split(";",2)[0]
+      file_type = "application/x-bzip" if file_type == "application/x-bzip2"
+      file_type = "text/x-csrc" if file_type == "text/x-c"
+      if file_type == "application/x-bzip" and mimetype == "application/x-compressed-tar"
+        mimetype = "application/x-bzip-compressed-tar"
+      elsif file_type == "application/x-gzip" and mimetype == "application/x-bzip-compressed-tar"
+        mimetype = "application/x-compressed-tar"
       end
+      mimetype = vote(mimetype, magic_type, file_type)
     end
-    return nil unless rv
-    Mimetype[ rv ]
+    return nil unless mimetype
+    Mimetype[ mimetype ]
+  end
+  
+  def vote(*args)
+    hist = Hash.new{|h,k| h[k] = 0 }
+    args.compact!
+    args.each{|a| 
+      unless very_generic_type?(a) 
+        hist[a] += generic_type?(a) ? 0.3 : 1 
+      end
+    }
+    return args[0] if hist.empty? 
+    hist.to_a.max_by{|(k,v)| v }[0]
   end
 
-  GENERIC_TYPES = %w(
+  GENERIC_TYPES = {}
+  %w(
     application/x-ole-storage
+    application/vnd.ms-office
     application/zip
     application/xml
     text/x-csrc
+    text/x-c
     text/x-tex
     text/plain
     application/octet-stream
     application/x-gzip
     application/x-tar
     application/x-bzip
+    application/x-bzip2
     application/x-compressed-tar
     application/x-bzip-compressed-tar
     image/tiff
     audio/x-vorbis+ogg
     audio/mpeg
     audio/x-riff
+    audio/x-mod
     video/x-theora+ogg
     video/x-ms-asf
-  )
+  ).each{|k| GENERIC_TYPES[k] = true }
+
+  VERY_GENERIC_TYPES = {}
+  %w(
+    application/x-ole-storage
+    application/zip
+    application/xml
+    text/plain
+    application/octet-stream
+    application/x-gzip
+    application/x-tar
+    application/x-bzip
+    application/x-bzip2
+  ).each{|k| VERY_GENERIC_TYPES[k] = true }
+
+  def very_generic_type?(t)
+    return true if t.nil?
+    VERY_GENERIC_TYPES[t]
+  end
 
   def generic_type?(t)
-    GENERIC_TYPES.include?(t)
+    return true if t.nil?
+    GENERIC_TYPES[t]
   end
 
   # check if we are dealing with a special node
