@@ -86,7 +86,8 @@ public
     mimetype = magic_type if very_generic_type?(mimetype)
     mimetype = binary if mimetype.nil?
     if File.exist?(filename)
-      file_type = `file -ib -- '#{filename.gsub("'", "'\\\\''")}'`.strip
+      escaped = "'#{filename.gsub("'", "'\\\\''")}'"
+      file_type = `file -ib -- #{escaped}`.strip
       file_type = file_type.split(";",2)[0]
       file_type = "application/x-bzip" if file_type == "application/x-bzip2"
       file_type = "text/x-csrc" if file_type == "text/x-c"
@@ -94,6 +95,22 @@ public
         mimetype = "application/x-bzip-compressed-tar"
       elsif file_type == "application/x-gzip" and mimetype == "application/x-bzip-compressed-tar"
         mimetype = "application/x-compressed-tar"
+      end
+      if mimetype == "application/zip"
+        # yon blighted backend fails to preserve filename extensions
+        # so I must do terrible hacks to secret out the mysteries
+        # oh glorious skies above this blood-drenched battlefield,
+        # witness my descent into this most dreadful state
+        # carry my banner and hear my cry
+        uz = `unzip -l -- #{escaped}`
+        files = uz.grep(/^\s+\d+/).map{|f|f.strip.split("  ",3)[2]}
+        if uz.include?("ppt/presentation.xml")
+          mimetype = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        elsif uz.include?("word/document.xml")
+          mimetype = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        elsif uz.include?("xl/workbook.xml")
+          mimetype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        end
       end
       mimetype = vote(mimetype, magic_type, file_type)
     end

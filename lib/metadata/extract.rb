@@ -933,9 +933,24 @@ extend self
 
   office_types = %w(
   application/msword
-  application/vnd.ms-powerpoint
-  application/vnd.ms-excel
   application/rtf
+  application/vnd.openxmlformats-officedocument.presentationml.presentation
+  application/vnd.openxmlformats-officedocument.wordprocessingml.document
+  application/vnd.ms-word.document.macroenabled.12
+  application/vnd.openxmlformats-officedocument.wordprocessingml.template
+  application/vnd.ms-word.template.macroenabled.12
+  application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+  application/vnd.ms-excel.sheet.macroenabled.12
+  application/vnd.openxmlformats-officedocument.spreadsheetml.template
+  application/vnd.ms-excel.template.macroenabled.12
+  application/vnd.openxmlformats-officedocument.presentationml.presentation
+  application/vnd.ms-powerpoint.presentation.macroenabled.12
+  application/vnd.openxmlformats-officedocument.presentationml.template
+  application/vnd.ms-powerpoint.template.macroenabled.12
+  application/vnd.ms-excel.sheet.binary.macroenabled.12
+  application/vnd.ms-word
+  application/vnd.ms-excel
+  application/vnd.ms-powerpoint
   )
 
   def self.create_text_extractor(mimetype, &block)
