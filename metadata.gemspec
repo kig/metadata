@@ -1,5 +1,6 @@
 require './lib/metadata.rb'
 require 'rake'
+dir = "#{File.dirname(__FILE__)}/"
 
 version = Metadata::VERSION
 date = Time.now.strftime("%Y-%m-%d")
@@ -12,11 +13,11 @@ Gem::Specification.new do |s|
   s.email = 'ilmari.heikkinen@gmail.com'
   s.authors = ['Ilmari Heikkinen']
   s.files = FileList[
-    './lib/metadata.rb',
-    './lib/metadata/extract.rb',
-    './lib/metadata/mime_info.rb',
-    './lib/metadata/mime_info_magic.rb',
-    './lib/metadata/bt.rb'
+    dir + 'lib/metadata.rb',
+    dir + 'lib/metadata/extract.rb',
+    dir + 'lib/metadata/mime_info.rb',
+    dir + 'lib/metadata/mime_info_magic.rb',
+    dir + 'lib/metadata/bt.rb'
   ].to_a
   s.executables << 'mdh'
   s.executables << 'chardet'

@@ -1,4 +1,4 @@
-require 'metadata/title_guesser'
+require 'lib/metadata/title_guesser'
 
 module Metadata
 module PublicationGuesser

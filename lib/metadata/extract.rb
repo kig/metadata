@@ -4,7 +4,7 @@ require 'time'
 require 'date'
 require 'base64'
 
-require 'metadata/mime_info'
+require 'lib/metadata/mime_info'
 
 
 class Pathname
@@ -997,7 +997,7 @@ extend self
         hash[v.downcase] = hash[k.sub("name", "value")]
       end
     }
-    f = { 
+    f = {
       '85' => 'MP3',
       'fLaC' => 'FLAC',
       'vrbs' => 'Vorbis',
