@@ -12,11 +12,11 @@ Gem::Specification.new do |s|
   s.email = 'ilmari.heikkinen@gmail.com'
   s.authors = ['Ilmari Heikkinen']
   s.files = FileList[
-    'lib/metadata.rb',
-    'lib/metadata/extract.rb',
-    'lib/metadata/mime_info.rb',
-    'lib/metadata/mime_info_magic.rb',
-    'lib/metadata/bt.rb'
+    './lib/metadata.rb',
+    './lib/metadata/extract.rb',
+    './lib/metadata/mime_info.rb',
+    './lib/metadata/mime_info_magic.rb',
+    './lib/metadata/bt.rb'
   ].to_a
   s.executables << 'mdh'
   s.executables << 'chardet'
