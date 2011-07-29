@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.email       = ["ilmari.heikkinen@gmail.com"]
   s.homepage    = ""
   s.summary     = %q{Metadata extractor}
-  s.description = %q{TODO: Write a gem description}
+  s.description = %q{Metadata extractor}
 
   s.rubyforge_project = "metadata"
 
