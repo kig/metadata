@@ -84,7 +84,7 @@ public
 
 private
   def read_magic(file)
-    f = File.new(file)
+    f = File.open(file, :encoding=>"BINARY")
     return if f.read(12) != "MIME-Magic\0\n"
 
     while buf = f.gets

@@ -166,7 +166,7 @@ Requirements
 
     List of Debian packages:
       dcraw
-      libimlib2-ruby
+      libmagick9-dev
       extract
       libimage-exiftool-perl
       poppler-utils

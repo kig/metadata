@@ -19,7 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 require "singleton"
-require "lib/metadata/mime_info_magic"
+require "metadata/mime_info_magic"
 
 
 =begin
@@ -288,9 +288,10 @@ public
   def get_mime_dirs
     dirs = []
 
-    if s = ENV["XDG_DATA_DIRS"] and tmp = s.split(":")
+    s = ENV["XDG_DATA_DIRS"]
+    if s
       # strip trailing slashes, then append to the array
-      tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
+      s.split(":").each { |t| dirs << t.gsub(/\/*$/, "") }
     end
 
     # add default data directories
@@ -300,9 +301,10 @@ public
 
     count = dirs.length
 
-    if s = ENV["XDG_DATA_HOME"] and tmp = s.split(":")
+    s = ENV["XDG_DATA_HOME"]
+    if s
       # strip trailing slashes, then append to the array
-      tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
+      s.split(":").each { |t| dirs << t.gsub(/\/*$/, "") }
     end
 
     # add default directory

@@ -1,4 +1,4 @@
-require 'sha1'
+require 'digest/sha1'
 
 class Hash
   def bencode
@@ -10,7 +10,7 @@ class Array
   def bencode
     "l"+map{|i| i.bencode}.join+"e"
   end
-  
+
   def expand_bdecoded
     case k=shift
     when :d

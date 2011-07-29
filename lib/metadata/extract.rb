@@ -4,7 +4,8 @@ require 'time'
 require 'date'
 require 'base64'
 
-require 'lib/metadata/mime_info'
+require 'metadata/mime_info'
+
 
 
 class Pathname
@@ -72,8 +73,6 @@ class String
         'shift-jis','euc-jp',
         'iso8859-1','cp1252',
         'big-5','gbk','gb18030','gb2312'].compact
-      pk = $KCODE
-      $KCODE = 'ascii'
       case self
       when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
         charsets.unshift 'utf-32'
@@ -84,7 +83,6 @@ class String
       when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
         charsets.unshift 'ascii' unless self.include?("\000")
       end
-      $KCODE = pk
       cset = charsets.find{|c|
         ((Iconv.iconv('utf-8', c, self)[0]) rescue false)
       }
@@ -106,8 +104,6 @@ class String
       'iso8859-1','cp1252',
       'big-5','gbk','gb18030','gb2312']
     cd = chardet
-    pk = $KCODE
-    $KCODE = 'ascii'
     if cd
       case cd
       when /iso-8859|windows-1252/i
@@ -140,7 +136,6 @@ class String
     when /\301\265|\220\333/
       charsets.unshift 'gbk'
     end
-    $KCODE = pk
     cset = charsets.find{|c|
       ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
     }
@@ -219,7 +214,7 @@ extend self
   # All strings are converted to UTF-8.
   #
   def extract(filename, mimetype=MimeInfo.get(filename.to_s), charset=nil, pdf=nil)
-    verbose = verbose && !quiet
+    verbose = self.verbose && !self.quiet
     filename = filename.to_s
     mimetype = Mimetype[mimetype] unless mimetype.is_a?( Mimetype )
     unless File.exist?(filename)
@@ -240,7 +235,7 @@ extend self
     STDERR.puts "Processing #{filename}", " Metadata extraction" if verbose
     while mt.is_a?(Mimetype) and mt != Mimetype
       STDERR.puts "  Trying #{mt}" if verbose
-      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_")
+      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_").to_sym
       if new_methods.include?( mn )
         begin
           rv = __send__( mn, filename, charset )
@@ -557,19 +552,19 @@ extend self
       keywords = h['keywords'].split(/[,.]/).map{|s| enc_utf8(s.strip, charset) }.find_all{|s| not s.empty? }
     end
     md = {
-      'Doc.Title', enc_utf8(h['title'], charset),
-      'Doc.Author', enc_utf8(h['author'], charset),
-      'Doc.Created', parse_time(h['creationdate']),
-      'Doc.Subject', enc_utf8(h['subject'], charset),
-      'Doc.Modified', parse_time(h['moddate']),
-      'Doc.PageCount', h['pages'],
-      'Doc.Keywords', keywords,
-      'Doc.PageSizeName', h['page_size'],
-      'Doc.WordCount', h['words'],
-      'Doc.Charset', charset,
-      'Image.Width', parse_num(h['width'], :f),
-      'Image.Height', parse_num(h['height'], :f),
-      'Image.DimensionUnit', 'mm'
+      'Doc.Title' => enc_utf8(h['title'], charset),
+      'Doc.Author' => enc_utf8(h['author'], charset),
+      'Doc.Created' => parse_time(h['creationdate']),
+      'Doc.Subject' => enc_utf8(h['subject'], charset),
+      'Doc.Modified' => parse_time(h['moddate']),
+      'Doc.PageCount' => h['pages'],
+      'Doc.Keywords' => keywords,
+      'Doc.PageSizeName' => h['page_size'],
+      'Doc.WordCount' => h['words'],
+      'Doc.Charset' => charset,
+      'Image.Width' => parse_num(h['width'], :f),
+      'Image.Height' => parse_num(h['height'], :f),
+      'Image.DimensionUnit' => 'mm'
     }
     md.delete_if{|k,v| v.nil? }
     md
@@ -645,22 +640,22 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Audio.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+      'Audio.Duration' => (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Audio.Bitrate' => h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
                        parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
-      'Audio.Codec', enc_utf8(h['audio_format'], charset),
-      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
-      'Audio.Channels', parse_num(h['audio_nch'], :i),
+      'Audio.Codec' => enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate' => parse_num(h['audio_rate'], :i),
+      'Audio.Channels' => parse_num(h['audio_nch'], :i),
 
-      'Audio.Title', enc_utf8(h['title'] || h['name'], charset),
-      'Audio.Artist', enc_utf8(h['artist'] || h['author'], charset),
-      'Audio.Album', enc_utf8(h['album'], charset),
-      'Audio.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
-      'Audio.Comment', enc_utf8(h['comment'] || h['comments'], charset),
-      'Audio.TrackNo', parse_num(h['track'], :i),
-      'Audio.Copyright', enc_utf8(h['copyright'], charset),
-      'Audio.Software', enc_utf8(h['software'], charset),
-      'Audio.Genre', parse_genre(enc_utf8(h['genre'], charset))
+      'Audio.Title' => enc_utf8(h['title'] || h['name'], charset),
+      'Audio.Artist' => enc_utf8(h['artist'] || h['author'], charset),
+      'Audio.Album' => enc_utf8(h['album'], charset),
+      'Audio.ReleaseDate' => parse_time(h['date'] || h['creation date'] || h['year']),
+      'Audio.Comment' => enc_utf8(h['comment'] || h['comments'], charset),
+      'Audio.TrackNo' => parse_num(h['track'], :i),
+      'Audio.Copyright' => enc_utf8(h['copyright'], charset),
+      'Audio.Software' => enc_utf8(h['software'], charset),
+      'Audio.Genre' => parse_genre(enc_utf8(h['genre'], charset))
     }
     id3.delete_if{|k,v| v.nil? }
     info.merge(id3)
@@ -670,30 +665,30 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Image.Width', parse_num(h['video_width'], :f),
-      'Image.Height', parse_num(h['video_height'], :f),
-      'Image.DimensionUnit', 'px',
-      'Video.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
-      'Video.Framerate', parse_num(h['video_fps'], :f),
-      'Video.Bitrate', h['video_bitrate'] && h['video_bitrate'] != '0' ?
+      'Image.Width' => parse_num(h['video_width'], :f),
+      'Image.Height' => parse_num(h['video_height'], :f),
+      'Image.DimensionUnit' => 'px',
+      'Video.Duration' => (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Video.Framerate' => parse_num(h['video_fps'], :f),
+      'Video.Bitrate' => h['video_bitrate'] && h['video_bitrate'] != '0' ?
                        parse_num(h['video_bitrate'], :i) / 1000.0 : nil,
-      'Video.Codec', enc_utf8(h['video_format'], charset),
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+      'Video.Codec' => enc_utf8(h['video_format'], charset),
+      'Audio.Bitrate' => h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
                        parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
-      'Audio.Codec', enc_utf8(h['audio_format'], charset),
-      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
-      'Audio.Channels', parse_num(h['audio_nch'], :i),
+      'Audio.Codec' => enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate' => parse_num(h['audio_rate'], :i),
+      'Audio.Channels' => parse_num(h['audio_nch'], :i),
 
-      'Video.Title', enc_utf8(h['title'] || h['name'], charset),
-      'Video.Artist', enc_utf8(h['artist'] || h['author'], charset),
-      'Video.Album', enc_utf8(h['album'], charset),
-      'Video.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
-      'Video.Comment', enc_utf8(h['comment'] || h['comments'], charset),
-      'Video.TrackNo', parse_num(h['track'], :i),
-      'Video.Genre', parse_genre(enc_utf8(h['genre'], charset)),
-      'Video.Copyright', enc_utf8(h['copyright'], charset),
-      'Video.Software', enc_utf8(h['software'], charset),
-      'Video.Demuxer', enc_utf8(h['demuxer'], charset)
+      'Video.Title' => enc_utf8(h['title'] || h['name'], charset),
+      'Video.Artist' => enc_utf8(h['artist'] || h['author'], charset),
+      'Video.Album' => enc_utf8(h['album'], charset),
+      'Video.ReleaseDate' => parse_time(h['date'] || h['creation date'] || h['year']),
+      'Video.Comment' => enc_utf8(h['comment'] || h['comments'], charset),
+      'Video.TrackNo' => parse_num(h['track'], :i),
+      'Video.Genre' => parse_genre(enc_utf8(h['genre'], charset)),
+      'Video.Copyright' => enc_utf8(h['copyright'], charset),
+      'Video.Software' => enc_utf8(h['software'], charset),
+      'Video.Demuxer' => enc_utf8(h['demuxer'], charset)
     }
     case h['demuxer']
     when 'avi'
@@ -724,17 +719,17 @@ extend self
   alias_method('video_x_ms_asf', 'video_x_ms_wmv')
 
   def image(filename, charset)
-    begin
-      gem_require 'imlib2'
-      img = Imlib2::Image.load(filename.to_s)
-      w = img.width
-      h = img.height
-      id_out = ""
-      img.delete!
-    rescue Exception
+    #begin
+    #  gem_require 'imlib2'
+    #  img = Imlib2::Image.load(filename.to_s)
+    #  w = img.width
+    #  h = img.height
+    #  id_out = ""
+    #  img.delete!
+    #rescue Exception
       id_out = secure_filename(filename){|tfn| `identify #{tfn}` }
       w,h = id_out.scan(/[0-9]+x[0-9]+/)[0].split("x",2)
-    end
+    #end
     exif = (extract_exif(filename, charset) rescue {})
     info = {
       'Image.Width' => parse_num(w, :f),
@@ -1017,35 +1012,35 @@ extend self
     keywords = arr.find_all{|k,v| k == 'keywords' }.map{|k,v| enc_utf8(v, nil) }
     revisions = arr.find_all{|k,v| k == 'revision history' }.map{|k,v| enc_utf8(v, nil) }
     md = {
-      'Doc.Title', enc_utf8(h['title'], nil),
-      'Doc.Subject', enc_utf8(h['subject'], nil),
-      'Doc.Author', enc_utf8(h['creator'], nil),
-      'Doc.LastSavedBy', enc_utf8(h['last saved by'], nil),
+      'Doc.Title' => enc_utf8(h['title'], nil),
+      'Doc.Subject' => enc_utf8(h['subject'], nil),
+      'Doc.Author' => enc_utf8(h['creator'], nil),
+      'Doc.LastSavedBy' => enc_utf8(h['last saved by'], nil),
 
-      'Doc.Language', enc_utf8(h['language'], nil),
+      'Doc.Language' => enc_utf8(h['language'], nil),
 
-      'Doc.Artist', enc_utf8(h['artist'], nil),
-      'Doc.Genre', enc_utf8(h['genre'], nil),
-      'Doc.Album', enc_utf8(h['album'], nil),
-      'Doc.Language', enc_utf8(h['language'], nil),
+      'Doc.Artist' => enc_utf8(h['artist'], nil),
+      'Doc.Genre' => enc_utf8(h['genre'], nil),
+      'Doc.Album' => enc_utf8(h['album'], nil),
+      'Doc.Language' => enc_utf8(h['language'], nil),
 
-      'Doc.Created', parse_time(h['creation date']),
-      'Doc.Modified', parse_time(h['modification date'] || h['date']),
-      'Doc.RevisionHistory', revisions.empty? ? nil : revisions,
+      'Doc.Created' => parse_time(h['creation date']),
+      'Doc.Modified' => parse_time(h['modification date'] || h['date']),
+      'Doc.RevisionHistory' => revisions.empty? ? nil : revisions,
 
-      'Doc.Description', enc_utf8(h['description'], nil),
-      'Doc.Keywords', keywords.empty? ? nil : keywords,
+      'Doc.Description' => enc_utf8(h['description'], nil),
+      'Doc.Keywords' => keywords.empty? ? nil : keywords,
 
-      'File.Software', enc_utf8(h['software'] || h['generator'], nil),
-      'Doc.Template', enc_utf8(h['template'], nil),
+      'File.Software' => enc_utf8(h['software'] || h['generator'], nil),
+      'Doc.Template' => enc_utf8(h['template'], nil),
 
-      'Archive.Contents', filenames.empty? ? nil : filenames,
+      'Archive.Contents' => filenames.empty? ? nil : filenames,
 
-      'Doc.WordCount',      parse_num(h['word count'], :i),
-      'Doc.PageCount',      parse_num(h['page count'], :i),
-      'Doc.ParagraphCount', parse_num(h['paragraph count'], :i),
-      'Doc.LineCount',      parse_num(h['line count'], :i),
-      'Doc.CharacterCount', parse_num(h['character count'], :i)
+      'Doc.WordCount' =>      parse_num(h['word count'], :i),
+      'Doc.PageCount' =>      parse_num(h['page count'], :i),
+      'Doc.ParagraphCount' => parse_num(h['paragraph count'], :i),
+      'Doc.LineCount' =>      parse_num(h['line count'], :i),
+      'Doc.CharacterCount' => parse_num(h['character count'], :i)
     }
     md.delete_if{|k,v| v.nil? }
     md
@@ -1180,15 +1175,15 @@ extend self
     w, h = hash["Output size"].split("x",2).map{|s| parse_num(s.strip, :f) }
     t = hash
     info = {
-      'Image.Width', w,
-      'Image.Height', h,
+      'Image.Width' => w,
+      'Image.Height' => h,
 
-      'Image.FilterPattern', t['Filter pattern'],
-      'Image.FocalLength', parse_num(t['Focal length'], :f),
-      'Image.ISOSpeed', parse_num(t['ISO speed'], :f),
-      'Image.CameraModel', enc_utf8(t['Camera'], nil),
-      'Image.ComponentCount', parse_num(t['Raw colors'], :i),
-      'Image.Fnumber', parse_num(t['Aperture'], :f)
+      'Image.FilterPattern' => t['Filter pattern'],
+      'Image.FocalLength' => parse_num(t['Focal length'], :f),
+      'Image.ISOSpeed' => parse_num(t['ISO speed'], :f),
+      'Image.CameraModel' => enc_utf8(t['Camera'], nil),
+      'Image.ComponentCount' => parse_num(t['Raw colors'], :i),
+      'Image.Fnumber' => parse_num(t['Aperture'], :f)
     }
     if t['Shutter']
       d,n = t['Shutter'].split("/")
@@ -1305,8 +1300,8 @@ extend self
 
   def parse_val(v)
     case v
-    when /^[0-9]+$/: v.to_i
-    when /^[0-9]+(\.[0-9]+)?$/: v.to_f
+    when /^[0-9]+$/ then v.to_i
+    when /^[0-9]+(\.[0-9]+)?$/ then v.to_f
     else
       v
     end
@@ -1382,26 +1377,26 @@ extend self
     ID3Lib::Info::Genres[genre_num] || s
   end
 
-  def remove_ligatures(s)
-    return s unless s.is_a?(String)
-    s.gsub("æ", 'ae').
-      gsub("ä", 'ae').
-      gsub("ö", 'oe').
-      gsub("å", 'o').
-      gsub("Æ", 'AE').
-      gsub("œ", "ce").
-      gsub("Œ", "CE").
-      gsub("ŋ", "ng").
-      gsub("Ŋ", "NG").
-      gsub("ʩ", "fng").
-      gsub("ﬀ", "ff").
-      gsub("ﬁ", "fi").
-      gsub("ﬂ", "fl").
-      gsub("ﬃ", "ffi").
-      gsub("ﬄ", "ffl").
-      gsub("ﬅ", "ft").
-      gsub("ﬆ", "st").
-      gsub("ß", "ss")
-  end
+  #def remove_ligatures(s)
+  #  return s unless s.is_a?(String)
+  #  s.gsub("æ", 'ae').
+  #    gsub("ä", 'ae').
+  #    gsub("ö", 'oe').
+  #    gsub("å", 'o').
+  #    gsub("Æ", 'AE').
+  #    gsub("œ", "ce").
+  #    gsub("Œ", "CE").
+  #    gsub("ŋ", "ng").
+  #    gsub("Ŋ", "NG").
+  #    gsub("ʩ", "fng").
+  #    gsub("ﬀ", "ff").
+  #    gsub("ﬁ", "fi").
+  #    gsub("ﬂ", "fl").
+  #    gsub("ﬃ", "ffi").
+  #    gsub("ﬄ", "ffl").
+  #    gsub("ﬅ", "ft").
+  #    gsub("ﬆ", "st").
+  #    gsub("ß", "ss")
+  #end
 
 end
