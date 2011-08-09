@@ -217,7 +217,7 @@ extend self
     STDERR.puts " Text extraction" if verbose
     while mt.is_a?(Mimetype) and mt != Mimetype
       STDERR.puts "  Trying #{mt}" if verbose
-      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_") + "__gettext"
+      mn = (mt.to_s.gsub(/[^a-z0-9]/i,"_") + "__gettext").to_sym
       if new_methods.include?( mn )
         begin
           rv = __send__( mn, filename, layout )
@@ -759,7 +759,7 @@ extend self
 
 
 
-  open_office_types = %w(
+  OPEN_OFFICE_TYPES = %w(
   application/vnd.oasis.opendocument.text
   application/vnd.oasis.opendocument.text-template
   application/vnd.oasis.opendocument.text-web
@@ -800,7 +800,7 @@ extend self
   application/x-starmath
   application/x-starchart)
 
-  office_types = %w(
+  OFFICE_TYPES = %w(
   application/msword
   application/rtf
   application/vnd.openxmlformats-officedocument.presentationml.presentation
@@ -834,13 +834,13 @@ extend self
     define_method(mn, &block)
   end
 
-  (open_office_types).each{|t|
+  (OPEN_OFFICE_TYPES).each{|t|
     create_text_extractor(t) do |filename, layout|
       nil
     end
   }
 
-  (open_office_types + office_types).each{|t|
+  (OPEN_OFFICE_TYPES + OFFICE_TYPES).each{|t|
     create_info_extractor(t) do |filename|
       extract_extract_info(filename)
     end
@@ -882,9 +882,9 @@ extend self
   def extract_extract_info(filename)
     arr = secure_filename(filename){|tfn| `extract #{tfn}` }.strip.split("\n").map{|s| s.split(" - ",2) }
     h = arr.to_hash
-    filenames = arr.find_all{|k,v| k == 'filename' }
-    keywords = arr.find_all{|k,v| k == 'keywords' }
-    revisions = arr.find_all{|k,v| k == 'revision history' }
+    filenames = arr.keep_if{|k,v| k == 'filename' }.map{|k,v| v}
+    keywords  = arr.keep_if{|k,v| k == 'keywords' }.map{|k,v| v}
+    revisions = arr.keep_if{|k,v| k == 'revision history' }.map{|k,v| v}
     md = {
       'Doc.Title' => h['title'],
       'Doc.Subject' => h['subject'],

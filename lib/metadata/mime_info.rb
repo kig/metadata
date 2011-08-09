@@ -103,7 +103,7 @@ public
         # witness my descent into this most dreadful state
         # carry my banner and hear my cry
         uz = `unzip -l -- #{escaped}`
-        files = uz.grep(/^\s+\d+/).map{|f|f.strip.split("  ",3)[2]}
+        #files = uz.grep(/^\s+\d+/).map{|f|f.strip.split("  ",3)[2]}
         if uz.include?("ppt/presentation.xml")
           mimetype = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
         elsif uz.include?("word/document.xml")
