@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  %w(flacinfo-rb wmainfo-rb MP4Info id3lib-ruby apetag mini_magick).each do |dep|
+  %w(flacinfo-rb wmainfo-rb MP4Info id3lib-ruby apetag text hpricot ruby-mp3info).each do |dep|
     s.add_dependency(dep)
   end
 end
