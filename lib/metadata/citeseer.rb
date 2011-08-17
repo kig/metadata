@@ -15,7 +15,7 @@ end
 class CiteSeer
 
   def self.get_info(title)
-    title = title.to_utf8
+    title = Metadata.to_utf8(title)
     url = "http://citeseer.ist.psu.edu/cs?Documents&af=Title&q=#{CGI.escape title}"
     page = begin
       Hpricot.parse(open(url){|f| f.read })
@@ -33,11 +33,11 @@ class CiteSeer
     end
 
     sorted_links = links.sort_by{|a|
-      Text::Levenshtein.distance(title.downcase, a.inner_text.rsplit(" - ",2).first.downcase.to_utf8)
+      Text::Levenshtein.distance(title.downcase, Metadata.to_utf8(a.inner_text.rsplit(" - ",2).first.downcase))
     }
     link = sorted_links.first
 
-    if Text::Levenshtein.distance(title.downcase, link.inner_text.rsplit(" - ",2).first.downcase.to_utf8) > (title.length / 2)
+    if Text::Levenshtein.distance(title.downcase, Metadata.to_utf8(link.inner_text.rsplit(" - ",2).first.downcase.to_utf8)) > (title.length / 2)
       return {}
     end
 

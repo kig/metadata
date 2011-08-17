@@ -1,4 +1,6 @@
 # coding: utf-8
+require 'rubygems'
+require 'rchardet19'
 require 'iconv'
 require 'pathname'
 require 'time'
@@ -64,9 +66,23 @@ class Numeric
 
 end
 
-
 module Metadata
 extend self
+
+# @param [String] string
+  def self.to_utf8(string)
+    #string.unpack('C*').pack('U*') # does not work correctly
+    cd = ::CharDet.detect(string, :silent => true)
+    STDERR.puts "Enc #{cd.encoding} whis #{cd.confidence}"
+    if cd.confidence > 0.6 then
+      string.encode('utf-8', cd.encoding, :invalid => :replace)
+      #Iconv.conv("UTF-8", cd.encoding, string)
+    else
+      ic = Iconv.new('UTF-8//IGNORE', 'UTF-8')
+      ic.iconv(string + ' ')[0..-2]
+    end
+
+  end
 
   attr_accessor(:quiet, :verbose,
                 :sha1sum, :md5sum,
@@ -198,8 +214,13 @@ extend self
         rv[field] ||= guess[field] if guess[field]
       }
     end
-    rv['File.Modified'] = parse_time(File.mtime(filename.to_s).iso8601)
+    rv['File.Modified'] = File.mtime(filename.to_s)
     rv.delete_if{|k,v| v.nil? }
+
+    rv.dup.each do |key, value|
+      rv[key] = if value.is_a? String then Metadata.to_utf8(value) else value end
+    end
+
     rv
   end
 
@@ -292,8 +313,8 @@ extend self
 
 #     cites = ReferenceGuesser.guess_references(text)
 
-    guess['Doc.Title'] = title.strip.to_utf8 if title and title.strip.size < 100
-    guess['Doc.Description'] = abstract.strip.to_utf8 if abstract
+    guess['Doc.Title'] = title.strip if title and title.strip.size < 100
+    guess['Doc.Description'] = abstract.strip if abstract
 #     guess['Doc.Citations'] = cites if cites and not cites.empty?
     guess['Doc.Keywords'] = kws if kws and not kws.empty?
     if cats and not cats.empty?

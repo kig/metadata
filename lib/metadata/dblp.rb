@@ -32,7 +32,7 @@ class DBLP
       {}
     end
     if hash['title']
-      if Text::Levenshtein.distance(title.downcase, hash['title'].downcase.to_utf8) > (title.length / 2)
+      if Text::Levenshtein.distance(title.downcase, Metadata.to_utf8(hash['title'].downcase)) > (title.length / 2)
         return {}
       end
     end
