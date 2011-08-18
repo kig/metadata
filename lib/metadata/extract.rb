@@ -73,7 +73,8 @@ extend self
   def self.to_utf8(string)
     #string.unpack('C*').pack('U*') # does not work correctly
     cd = ::CharDet.detect(string, :silent => true)
-    STDERR.puts "Enc #{cd.encoding} whis #{cd.confidence}"
+    # TODO use logger
+    STDERR.puts "Encoding #{cd.encoding} whis confidence #{cd.confidence}" if verbose
     if cd.confidence > 0.6 then
       string.encode('utf-8', cd.encoding, :invalid => :replace)
       #Iconv.conv("UTF-8", cd.encoding, string)
@@ -218,7 +219,7 @@ extend self
     rv.delete_if{|k,v| v.nil? }
 
     rv.dup.each do |key, value|
-      rv[key] = if value.is_a? String then Metadata.to_utf8(value) else value end
+      rv[key] = if value.is_a? String and !value.frozen? then Metadata.to_utf8(value) else value end
     end
 
     rv
