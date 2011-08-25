@@ -74,7 +74,7 @@ extend self
     #string.unpack('C*').pack('U*') # does not work correctly
     cd = ::CharDet.detect(string, :silent => true)
     # TODO use logger
-    STDERR.puts "Encoding #{cd.encoding} whis confidence #{cd.confidence}" if verbose
+    STDERR.puts "Encoding #{cd.encoding} with confidence #{cd.confidence}" if verbose
     if cd.confidence > 0.6 then
       string.encode('utf-8', cd.encoding, :invalid => :replace)
       #Iconv.conv("UTF-8", cd.encoding, string)
