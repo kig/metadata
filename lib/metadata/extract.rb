@@ -711,7 +711,7 @@ extend self
 
 
   def text__gettext(filename, layout=false)
-    (File.read(filename) || "")
+    (File.read(filename, :encoding => "BINARY") || "")
   end
 
   def text_html__gettext(filename, layout=false)
