@@ -30,7 +30,7 @@ require "metadata/mime_info_magic"
    info = MimeInfo.get('foo.xml') #=> Mimetype['text/xml']
    info.description #=> "eXtensible Markup Language document"
    info.description("de") #=> "XML-Dokument"
-  
+
    info2 = MimeInfo.get('foo.rb') #=> Mimetype['application/x-ruby']
    info2.description #=> "Ruby script"
    info2.is_a? Mimetype['text/plain'] #=> true
@@ -66,7 +66,7 @@ class MimeInfo
   def self.get(filename)
     instance.type(filename)
   end
-  
+
   class << self
     alias_method :[], :get
   end
@@ -103,7 +103,7 @@ public
         # witness my descent into this most dreadful state
         # carry my banner and hear my cry
         uz = `unzip -l -- #{escaped}`
-        files = uz.grep(/^\s+\d+/).map{|f|f.strip.split("  ",3)[2]}
+        #files = uz.grep(/^\s+\d+/).map{|f|f.strip.split("  ",3)[2]}
         if uz.include?("ppt/presentation.xml")
           mimetype = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
         elsif uz.include?("word/document.xml")
@@ -117,16 +117,16 @@ public
     return nil unless mimetype
     Mimetype[ mimetype ]
   end
-  
+
   def vote(*args)
     hist = Hash.new{|h,k| h[k] = 0 }
     args.compact!
-    args.each{|a| 
-      unless very_generic_type?(a) 
-        hist[a] += generic_type?(a) ? 0.3 : 1 
+    args.each{|a|
+      unless very_generic_type?(a)
+        hist[a] += generic_type?(a) ? 0.3 : 1
       end
     }
-    return args[0] if hist.empty? 
+    return args[0] if hist.empty?
     hist.to_a.max_by{|(k,v)| v }[0]
   end
 
@@ -256,7 +256,7 @@ public
   def description(mime, language=nil)
     Mimetype[mime].description(language)
   end
-  
+
   def self.description(*args)
     instance.description(*args)
   end
@@ -288,9 +288,10 @@ public
   def get_mime_dirs
     dirs = []
 
-    if s = ENV["XDG_DATA_DIRS"] and tmp = s.split(":")
+    s = ENV["XDG_DATA_DIRS"]
+    if s
       # strip trailing slashes, then append to the array
-      tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
+      s.split(":").each { |t| dirs << t.gsub(/\/*$/, "") }
     end
 
     # add default data directories
@@ -300,9 +301,10 @@ public
 
     count = dirs.length
 
-    if s = ENV["XDG_DATA_HOME"] and tmp = s.split(":")
+    s = ENV["XDG_DATA_HOME"]
+    if s
       # strip trailing slashes, then append to the array
-      tmp.each { |t| dirs << t.gsub(/\/*$/, "") }
+      s.split(":").each { |t| dirs << t.gsub(/\/*$/, "") }
     end
 
     # add default directory
@@ -360,7 +362,7 @@ module Mimetype
 
   attr_accessor :mimetype, :mimetypes
         attr_writer   :descriptions
-  
+
   # Returns the Mimetype corresponding to type_name.
   #
   def [](type_name, full_name=type_name)
@@ -419,7 +421,7 @@ module Mimetype
   def description(language=nil)
     self.descriptions[language]
   end
-  
+
   def extname
     extnames[0]
   end
@@ -427,7 +429,7 @@ module Mimetype
   def extnames
     MimeInfo.instance.type_exts[@mimetype] || [""]
   end
-  
+
   # Returns the descriptions hash for @mimetype.
   # Loads descriptions if they aren't loaded.
   #
@@ -447,7 +449,7 @@ module Mimetype
     load_info unless @sub_class_of
     @sub_class_of
   end
-  
+
   # Loads descriptions and superclass -info for @mimetype.
   #
   def load_info
@@ -458,20 +460,20 @@ module Mimetype
     extend(self)
     true
   end
-  
+
   # Returns mimetype string
   #
   def to_s
     @mimetype.to_s
   end
-  
+
   # Returns "Mimetype" for the root class,
   # "Mimetype['#{to_s}']" for others.
   #
   def inspect
     "Mimetype#{"['#{to_s}']" if @mimetype}"
   end
-  
+
   # Singleton class ancestors;
   # the Mimetypes this one inherits.
   # Loads info unless loaded
@@ -480,7 +482,7 @@ module Mimetype
     load_info unless @sub_class_of
     class<<self; ancestors end
   end
-  
+
   # Returns true if mimetype is
   # this one's ancestor.
   # Loads info unless loaded.
@@ -498,9 +500,9 @@ end
 if __FILE__ == $0
 
   if file = ARGV[0]
-  
+
     print "looking up mimetype for #{file}... "
-  
+
     if m = MimeInfo.get(file)
       puts m
     else
@@ -518,7 +520,7 @@ if __FILE__ == $0
         @info = MimeInfo.get('foo.xml')
         @t = Mimetype['audio/x-mp3']
       end
-  
+
       def test_info
         assert_equal(Mimetype['text/xml'], @info)
         assert_equal("eXtensible Markup Language document", @info.description)
@@ -530,12 +532,12 @@ if __FILE__ == $0
         assert_equal(Mimetype['application/pdf'], MimeInfo.get("foo.pdf"))
         assert_equal(Mimetype['inode/directory'], MimeInfo.get("foo"+File::SEPARATOR))
       end
-  
+
       def test_files
         assert_equal(Mimetype['inode/directory'], MimeInfo.get("."))
         assert_equal(Mimetype['application/x-ruby'], MimeInfo.get("mime_info.rb"))
       end
-  
+
       def test_Mimetype
         assert_equal(@t, Mimetype['audio/x-mp3'])
         assert_equal(@t.description, "MP3 audio")
@@ -547,7 +549,7 @@ if __FILE__ == $0
                      [Mimetype['audio/x-mp3'], Mimetype['audio'], Mimetype['application/octet-stream']] +
                      Mimetype.ancestors)
       end
-  
+
       def test_sub_class_of
         assert(Mimetype['application/x-ruby'].is_a?(Mimetype['text/plain']))
         assert(Mimetype['application/x-python'].is_a?(Mimetype['text/plain']))

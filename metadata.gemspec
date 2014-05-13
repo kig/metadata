@@ -1,27 +1,25 @@
-require './lib/metadata.rb'
-require 'rake'
-
-version = Metadata::VERSION
-date = Time.now.strftime("%Y-%m-%d")
+# -*- encoding: utf-8 -*-
+$:.push File.expand_path("../lib", __FILE__)
+require "metadata/version"
 
 Gem::Specification.new do |s|
-  s.name = 'metadata'
-  s.version = version
-  s.date = date
-  s.summary = 'Metadata extractor'
-  s.email = 'ilmari.heikkinen@gmail.com'
-  s.authors = ['Ilmari Heikkinen']
-  s.files = FileList[
-    'lib/metadata.rb',
-    'lib/metadata/extract.rb',
-    'lib/metadata/mime_info.rb',
-    'lib/metadata/mime_info_magic.rb',
-    'lib/metadata/bt.rb'
-  ].to_a
-  s.executables << 'mdh'
-  s.executables << 'chardet'
-  s.required_ruby_version = '>= 1.8.1'
-  %w(flacinfo-rb wmainfo-rb MP4Info id3lib-ruby apetag).each{|dep|
+  s.name        = "metadata"
+  s.version     = Metadata::VERSION
+  s.authors     = ["Ilmari Heikkinen"]
+  s.email       = ["ilmari.heikkinen@gmail.com"]
+  s.homepage    = ""
+  s.summary     = %q{Metadata extractor}
+  s.description = %q{Metadata extractor}
+
+  s.rubyforge_project = "metadata"
+
+  s.files         = `git ls-files`.split("\n")
+  s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
+  s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.require_paths = ["lib"]
+
+  %w(flacinfo-rb wmainfo-rb MP4Info id3lib-ruby apetag text hpricot ruby-mp3info rchardet19).each do |dep|
     s.add_dependency(dep)
-  }
+  end
 end
+

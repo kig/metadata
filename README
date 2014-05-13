@@ -147,7 +147,7 @@ List of supported formats
 Requirements
 ------------
 
-  * Ruby 1.8
+  * Ruby 1.9
 
   * Tons of metadata extraction programs and libs.
     This package has many dependencies since there is no single universal
@@ -166,7 +166,7 @@ Requirements
 
     List of Debian packages:
       dcraw
-      libimlib2-ruby
+      libmagick9-dev
       extract
       libimage-exiftool-perl
       poppler-utils
@@ -178,6 +178,27 @@ Requirements
       antiword
       catdoc
       shared-mime-info
+
+    Gem use next system tools:
+      md5sum
+      sha1sum
+      pdftotext
+      lynx (lynx-cur)
+      wc
+      identify
+      pstotext
+      zcat
+      antiword
+      catdoc
+      catppt
+      xls2csv
+      mplayer
+      exiftool
+      dcraw
+      pdfinfo
+      file
+      unzip
+      extract
 
   * You do want to install the latest versions of dcraw and
     shared-mime-info to be able to handle camera raw images.
