@@ -84,16 +84,16 @@ public
 
 private
   def read_magic(file)
-    f = File.new(file)
+    f = File.new(file, "r:binary")
     return if f.read(12) != "MIME-Magic\0\n"
 
     while buf = f.gets
       # check for new mimetype
-      if buf =~ /^\[(\d+):(.*)\]$/
+      if buf =~ /^\[(\d+):(.*)\]$/n
         last_entry = MimeInfoMagicEntry.new($2, $1.to_i)
         @magic[$2] = last_entry
         next
-      elsif !(buf =~ /^(\d*)>(\d+)=(.).*$/)
+      elsif !(buf =~ /^(\d*)>(\d+)=(.).*$/n)
         next
       end
 

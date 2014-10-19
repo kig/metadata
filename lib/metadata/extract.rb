@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'iconv'
 require 'pathname'
 require 'time'
@@ -75,13 +76,13 @@ class String
       pk = $KCODE
       $KCODE = 'ascii'
       case self
-      when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+      when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/n
         charsets.unshift 'utf-32'
-      when /\A(\xFE\xFF|\xFF\xFE)/
+      when /\A(\xFE\xFF|\xFF\xFE)/n
         charsets.unshift 'utf-16'
-      when /\A\xEF\xBB\xBF/
+      when /\A\xEF\xBB\xBF/n
         charsets.unshift 'utf-8'
-      when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
+      when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/mn
         charsets.unshift 'ascii' unless self.include?("\000")
       end
       $KCODE = pk
@@ -92,7 +93,7 @@ class String
     if self.count("\000")*2 >= length and cset == 'ascii'
       cset = 'utf-16' + (self.index("\000") % 2 == 0 ? 'le' : 'be')
     end
-    if cset =~ /windows-1255/i and self =~ /[a-z](\344|\366|\326|\304)[a-z]/
+    if cset =~ /windows-1255/i and self =~ /[a-z](\344|\366|\326|\304)[a-z]/n
       cset = 'windows-1252'
     end
     cset
@@ -111,7 +112,7 @@ class String
     if cd
       case cd
       when /iso-8859|windows-1252/i
-        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/
+        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/n
         nl = gsub(na_re,'').length
         if length > 1.5 * nl
           charsets.insert(8, cd) # low ascii content
@@ -126,18 +127,18 @@ class String
     end
     charsets.compact!
     case self
-    when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/
+    when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/n
       charsets.unshift 'utf-32'
       bom = true
-    when /\A(\xFE\xFF|\xFF\xFE)/
+    when /\A(\xFE\xFF|\xFF\xFE)/n
       charsets.unshift 'utf-16'
       bom = true
-    when /\A\xEF\xBB\xBF/
+    when /\A\xEF\xBB\xBF/n
       charsets.unshift 'utf-8'
       bom = true
-    when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/m
+    when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/mn
       charsets.unshift 'ascii' unless self.include?("\000")
-    when /\301\265|\220\333/
+    when /\301\265|\220\333/n
       charsets.unshift 'gbk'
     end
     $KCODE = pk
@@ -146,7 +147,7 @@ class String
     }
     if not bom
       if cset =~ /^utf-(16|32)(le|$)/i
-        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/
+        na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/n
         if us.length > 1.9 * us.gsub(na_re,'').length
           rcset = cset.sub(/le|$/){|m| m == 'be' ? 'le' : 'be' }
           nus = ((Iconv.iconv('utf-8', rcset, self)[0]) rescue false)
@@ -157,7 +158,7 @@ class String
       end
     end
     us ||= self.gsub(/[^0-9a-z._ '"\*\+\-]/,'?')
-    us.sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/, '') # strip UTF BOMs
+    us.sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/n, '') # strip UTF BOMs
     us.tr!("\0", "") # strip null bytes
     us
   end
@@ -557,19 +558,19 @@ extend self
       keywords = h['keywords'].split(/[,.]/).map{|s| enc_utf8(s.strip, charset) }.find_all{|s| not s.empty? }
     end
     md = {
-      'Doc.Title', enc_utf8(h['title'], charset),
-      'Doc.Author', enc_utf8(h['author'], charset),
-      'Doc.Created', parse_time(h['creationdate']),
-      'Doc.Subject', enc_utf8(h['subject'], charset),
-      'Doc.Modified', parse_time(h['moddate']),
-      'Doc.PageCount', h['pages'],
-      'Doc.Keywords', keywords,
-      'Doc.PageSizeName', h['page_size'],
-      'Doc.WordCount', h['words'],
-      'Doc.Charset', charset,
-      'Image.Width', parse_num(h['width'], :f),
-      'Image.Height', parse_num(h['height'], :f),
-      'Image.DimensionUnit', 'mm'
+      'Doc.Title' => enc_utf8(h['title'], charset),
+      'Doc.Author' => enc_utf8(h['author'], charset),
+      'Doc.Created' => parse_time(h['creationdate']),
+      'Doc.Subject' => enc_utf8(h['subject'], charset),
+      'Doc.Modified' => parse_time(h['moddate']),
+      'Doc.PageCount' => h['pages'],
+      'Doc.Keywords' => keywords,
+      'Doc.PageSizeName' => h['page_size'],
+      'Doc.WordCount' => h['words'],
+      'Doc.Charset' => charset,
+      'Image.Width' => parse_num(h['width'], :f),
+      'Image.Height' => parse_num(h['height'], :f),
+      'Image.DimensionUnit' => 'mm'
     }
     md.delete_if{|k,v| v.nil? }
     md
@@ -645,22 +646,22 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Audio.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+      'Audio.Duration' => (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Audio.Bitrate' => h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
                        parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
-      'Audio.Codec', enc_utf8(h['audio_format'], charset),
-      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
-      'Audio.Channels', parse_num(h['audio_nch'], :i),
+      'Audio.Codec' => enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate' => parse_num(h['audio_rate'], :i),
+      'Audio.Channels' => parse_num(h['audio_nch'], :i),
 
-      'Audio.Title', enc_utf8(h['title'] || h['name'], charset),
-      'Audio.Artist', enc_utf8(h['artist'] || h['author'], charset),
-      'Audio.Album', enc_utf8(h['album'], charset),
-      'Audio.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
-      'Audio.Comment', enc_utf8(h['comment'] || h['comments'], charset),
-      'Audio.TrackNo', parse_num(h['track'], :i),
-      'Audio.Copyright', enc_utf8(h['copyright'], charset),
-      'Audio.Software', enc_utf8(h['software'], charset),
-      'Audio.Genre', parse_genre(enc_utf8(h['genre'], charset))
+      'Audio.Title' => enc_utf8(h['title'] || h['name'], charset),
+      'Audio.Artist' => enc_utf8(h['artist'] || h['author'], charset),
+      'Audio.Album' => enc_utf8(h['album'], charset),
+      'Audio.ReleaseDate' => parse_time(h['date'] || h['creation date'] || h['year']),
+      'Audio.Comment' => enc_utf8(h['comment'] || h['comments'], charset),
+      'Audio.TrackNo' => parse_num(h['track'], :i),
+      'Audio.Copyright' => enc_utf8(h['copyright'], charset),
+      'Audio.Software' => enc_utf8(h['software'], charset),
+      'Audio.Genre' => parse_genre(enc_utf8(h['genre'], charset))
     }
     id3.delete_if{|k,v| v.nil? }
     info.merge(id3)
@@ -670,30 +671,30 @@ extend self
     id3 = (id3lib_extract(filename, charset) rescue {})
     h = mplayer_extract_info(filename)
     info = {
-      'Image.Width', parse_num(h['video_width'], :f),
-      'Image.Height', parse_num(h['video_height'], :f),
-      'Image.DimensionUnit', 'px',
-      'Video.Duration', (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
-      'Video.Framerate', parse_num(h['video_fps'], :f),
-      'Video.Bitrate', h['video_bitrate'] && h['video_bitrate'] != '0' ?
+      'Image.Width' => parse_num(h['video_width'], :f),
+      'Image.Height' => parse_num(h['video_height'], :f),
+      'Image.DimensionUnit' => 'px',
+      'Video.Duration' => (h['length'].to_i > 0) ? parse_num(h['length'], :f) : nil,
+      'Video.Framerate' => parse_num(h['video_fps'], :f),
+      'Video.Bitrate' => h['video_bitrate'] && h['video_bitrate'] != '0' ?
                        parse_num(h['video_bitrate'], :i) / 1000.0 : nil,
-      'Video.Codec', enc_utf8(h['video_format'], charset),
-      'Audio.Bitrate', h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
+      'Video.Codec' => enc_utf8(h['video_format'], charset),
+      'Audio.Bitrate' => h['audio_bitrate'] && h['audio_bitrate'] != '0' ?
                        parse_num(h['audio_bitrate'], :i) / 1000.0 : nil,
-      'Audio.Codec', enc_utf8(h['audio_format'], charset),
-      'Audio.Samplerate', parse_num(h['audio_rate'], :i),
-      'Audio.Channels', parse_num(h['audio_nch'], :i),
+      'Audio.Codec' => enc_utf8(h['audio_format'], charset),
+      'Audio.Samplerate' => parse_num(h['audio_rate'], :i),
+      'Audio.Channels' => parse_num(h['audio_nch'], :i),
 
-      'Video.Title', enc_utf8(h['title'] || h['name'], charset),
-      'Video.Artist', enc_utf8(h['artist'] || h['author'], charset),
-      'Video.Album', enc_utf8(h['album'], charset),
-      'Video.ReleaseDate', parse_time(h['date'] || h['creation date'] || h['year']),
-      'Video.Comment', enc_utf8(h['comment'] || h['comments'], charset),
-      'Video.TrackNo', parse_num(h['track'], :i),
-      'Video.Genre', parse_genre(enc_utf8(h['genre'], charset)),
-      'Video.Copyright', enc_utf8(h['copyright'], charset),
-      'Video.Software', enc_utf8(h['software'], charset),
-      'Video.Demuxer', enc_utf8(h['demuxer'], charset)
+      'Video.Title' => enc_utf8(h['title'] || h['name'], charset),
+      'Video.Artist' => enc_utf8(h['artist'] || h['author'], charset),
+      'Video.Album' => enc_utf8(h['album'], charset),
+      'Video.ReleaseDate' => parse_time(h['date'] || h['creation date'] || h['year']),
+      'Video.Comment' => enc_utf8(h['comment'] || h['comments'], charset),
+      'Video.TrackNo' => parse_num(h['track'], :i),
+      'Video.Genre' => parse_genre(enc_utf8(h['genre'], charset)),
+      'Video.Copyright' => enc_utf8(h['copyright'], charset),
+      'Video.Software' => enc_utf8(h['software'], charset),
+      'Video.Demuxer' => enc_utf8(h['demuxer'], charset)
     }
     case h['demuxer']
     when 'avi'
@@ -1017,35 +1018,35 @@ extend self
     keywords = arr.find_all{|k,v| k == 'keywords' }.map{|k,v| enc_utf8(v, nil) }
     revisions = arr.find_all{|k,v| k == 'revision history' }.map{|k,v| enc_utf8(v, nil) }
     md = {
-      'Doc.Title', enc_utf8(h['title'], nil),
-      'Doc.Subject', enc_utf8(h['subject'], nil),
-      'Doc.Author', enc_utf8(h['creator'], nil),
-      'Doc.LastSavedBy', enc_utf8(h['last saved by'], nil),
+      'Doc.Title' => enc_utf8(h['title'], nil),
+      'Doc.Subject' => enc_utf8(h['subject'], nil),
+      'Doc.Author' => enc_utf8(h['creator'], nil),
+      'Doc.LastSavedBy' => enc_utf8(h['last saved by'], nil),
 
-      'Doc.Language', enc_utf8(h['language'], nil),
+      'Doc.Language' => enc_utf8(h['language'], nil),
 
-      'Doc.Artist', enc_utf8(h['artist'], nil),
-      'Doc.Genre', enc_utf8(h['genre'], nil),
-      'Doc.Album', enc_utf8(h['album'], nil),
-      'Doc.Language', enc_utf8(h['language'], nil),
+      'Doc.Artist' => enc_utf8(h['artist'], nil),
+      'Doc.Genre' => enc_utf8(h['genre'], nil),
+      'Doc.Album' => enc_utf8(h['album'], nil),
+      'Doc.Language' => enc_utf8(h['language'], nil),
 
-      'Doc.Created', parse_time(h['creation date']),
-      'Doc.Modified', parse_time(h['modification date'] || h['date']),
-      'Doc.RevisionHistory', revisions.empty? ? nil : revisions,
+      'Doc.Created' => parse_time(h['creation date']),
+      'Doc.Modified' => parse_time(h['modification date'] || h['date']),
+      'Doc.RevisionHistory' => revisions.empty? ? nil : revisions,
 
-      'Doc.Description', enc_utf8(h['description'], nil),
-      'Doc.Keywords', keywords.empty? ? nil : keywords,
+      'Doc.Description' => enc_utf8(h['description'], nil),
+      'Doc.Keywords' => keywords.empty? ? nil : keywords,
 
-      'File.Software', enc_utf8(h['software'] || h['generator'], nil),
-      'Doc.Template', enc_utf8(h['template'], nil),
+      'File.Software' => enc_utf8(h['software'] || h['generator'], nil),
+      'Doc.Template' => enc_utf8(h['template'], nil),
 
-      'Archive.Contents', filenames.empty? ? nil : filenames,
+      'Archive.Contents' => filenames.empty? ? nil : filenames,
 
-      'Doc.WordCount',      parse_num(h['word count'], :i),
-      'Doc.PageCount',      parse_num(h['page count'], :i),
-      'Doc.ParagraphCount', parse_num(h['paragraph count'], :i),
-      'Doc.LineCount',      parse_num(h['line count'], :i),
-      'Doc.CharacterCount', parse_num(h['character count'], :i)
+      'Doc.WordCount' =>      parse_num(h['word count'], :i),
+      'Doc.PageCount' =>      parse_num(h['page count'], :i),
+      'Doc.ParagraphCount' => parse_num(h['paragraph count'], :i),
+      'Doc.LineCount' =>      parse_num(h['line count'], :i),
+      'Doc.CharacterCount' => parse_num(h['character count'], :i)
     }
     md.delete_if{|k,v| v.nil? }
     md
@@ -1180,15 +1181,15 @@ extend self
     w, h = hash["Output size"].split("x",2).map{|s| parse_num(s.strip, :f) }
     t = hash
     info = {
-      'Image.Width', w,
-      'Image.Height', h,
+      'Image.Width' => w,
+      'Image.Height' => h,
 
-      'Image.FilterPattern', t['Filter pattern'],
-      'Image.FocalLength', parse_num(t['Focal length'], :f),
-      'Image.ISOSpeed', parse_num(t['ISO speed'], :f),
-      'Image.CameraModel', enc_utf8(t['Camera'], nil),
-      'Image.ComponentCount', parse_num(t['Raw colors'], :i),
-      'Image.Fnumber', parse_num(t['Aperture'], :f)
+      'Image.FilterPattern' => t['Filter pattern'],
+      'Image.FocalLength' => parse_num(t['Focal length'], :f),
+      'Image.ISOSpeed' => parse_num(t['ISO speed'], :f),
+      'Image.CameraModel' => enc_utf8(t['Camera'], nil),
+      'Image.ComponentCount' => parse_num(t['Raw colors'], :i),
+      'Image.Fnumber' => parse_num(t['Aperture'], :f)
     }
     if t['Shutter']
       d,n = t['Shutter'].split("/")
@@ -1305,8 +1306,10 @@ extend self
 
   def parse_val(v)
     case v
-    when /^[0-9]+$/: v.to_i
-    when /^[0-9]+(\.[0-9]+)?$/: v.to_f
+    when /^[0-9]+$/
+      v.to_i
+    when /^[0-9]+(\.[0-9]+)?$/
+      v.to_f
     else
       v
     end
