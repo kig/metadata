@@ -34,7 +34,7 @@ extend self
     [/\b(overview)\b/i, 10] # uncommon in non-title
   ]
   WORDS = {}
-  File.read('/usr/share/dict/words').each_line{|l|
+  File.read('/usr/share/dict/words').force_encoding('UTF-8').each_line{|l|
     WORDS[l.strip.downcase] = l.strip
   }
 
