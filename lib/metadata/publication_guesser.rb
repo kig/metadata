@@ -1,3 +1,4 @@
+# encoding: utf-8
 require 'metadata/title_guesser'
 
 module Metadata
