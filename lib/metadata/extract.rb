@@ -1,3 +1,4 @@
+# encoding: utf-8
 # -*- coding: utf-8 -*-
 require 'iconv'
 require 'pathname'
@@ -73,9 +74,7 @@ class String
         'shift-jis','euc-jp',
         'iso8859-1','cp1252',
         'big-5','gbk','gb18030','gb2312'].compact
-      pk = $KCODE
-      $KCODE = 'ascii'
-      case self
+      case self.force_encoding("BINARY")
       when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/n
         charsets.unshift 'utf-32'
       when /\A(\xFE\xFF|\xFF\xFE)/n
@@ -85,15 +84,14 @@ class String
       when /\A[a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]+\Z/mn
         charsets.unshift 'ascii' unless self.include?("\000")
       end
-      $KCODE = pk
       cset = charsets.find{|c|
-        ((Iconv.iconv('utf-8', c, self)[0]) rescue false)
+        ((Iconv.iconv('utf-8', c, self.force_encoding("BINARY"))[0]) rescue false)
       }
     end
-    if self.count("\000")*2 >= length and cset == 'ascii'
-      cset = 'utf-16' + (self.index("\000") % 2 == 0 ? 'le' : 'be')
+    if self.force_encoding("BINARY").count("\000".force_encoding("BINARY"))*2 >= length and cset == 'ascii'
+      cset = 'utf-16' + (self.force_encoding("BINARY").index("\000".force_encoding("BINARY")) % 2 == 0 ? 'le' : 'be')
     end
-    if cset =~ /windows-1255/i and self =~ /[a-z](\344|\366|\326|\304)[a-z]/n
+    if cset =~ /windows-1255/i and self.force_encoding("BINARY") =~ /[a-z](\344|\366|\326|\304)[a-z]/n
       cset = 'windows-1252'
     end
     cset
@@ -107,8 +105,6 @@ class String
       'iso8859-1','cp1252',
       'big-5','gbk','gb18030','gb2312']
     cd = chardet
-    pk = $KCODE
-    $KCODE = 'ascii'
     if cd
       case cd
       when /iso-8859|windows-1252/i
@@ -126,7 +122,7 @@ class String
       end
     end
     charsets.compact!
-    case self
+    case self.force_encoding("BINARY")
     when /\A(\x00\x00\xFE\xFF|\xFF\xFE\x00\x00)/n
       charsets.unshift 'utf-32'
       bom = true
@@ -141,26 +137,25 @@ class String
     when /\301\265|\220\333/n
       charsets.unshift 'gbk'
     end
-    $KCODE = pk
     cset = charsets.find{|c|
-      ((us = Iconv.iconv('utf-8', c, self)[0]) rescue false)
+      ((us = Iconv.iconv('utf-8', c, self.force_encoding("BINARY"))[0]) rescue false)
     }
     if not bom
       if cset =~ /^utf-(16|32)(le|$)/i
         na_re = /[^a-zA-Z0-9_.:;,\{\}\(\)\\\/\[\]\n\t -]/n
         if us.length > 1.9 * us.gsub(na_re,'').length
           rcset = cset.sub(/le|$/){|m| m == 'be' ? 'le' : 'be' }
-          nus = ((Iconv.iconv('utf-8', rcset, self)[0]) rescue false)
+          nus = ((Iconv.iconv('utf-8', rcset, self.force_encoding("BINARY"))[0]) rescue false)
           if nus and (nus.gsub(na_re,'').length > us.gsub(na_re,'').length)
             us = nus
           end
         end
       end
     end
-    us ||= self.gsub(/[^0-9a-z._ '"\*\+\-]/,'?')
-    us.sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/n, '') # strip UTF BOMs
-    us.tr!("\0", "") # strip null bytes
-    us
+    us ||= self.force_encoding("BINARY").gsub(/[^0-9a-z._ '"\*\+\-]/,'?')
+    us.force_encoding("BINARY").sub!(/\A(\x00\x00\xFE\xFF|(\xFF\xFE(\x00\x00)?)|\xEF\xBB\xBF|\xFE\xFF)/n, '') # strip UTF BOMs
+    us.force_encoding("BINARY").tr!("\0", "") # strip null bytes
+    us.force_encoding("UTF-8")
   end
 
 end
@@ -241,7 +236,7 @@ extend self
     STDERR.puts "Processing #{filename}", " Metadata extraction" if verbose
     while mt.is_a?(Mimetype) and mt != Mimetype
       STDERR.puts "  Trying #{mt}" if verbose
-      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_")
+      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_").to_sym
       if new_methods.include?( mn )
         begin
           rv = __send__( mn, filename, charset )
@@ -342,7 +337,7 @@ extend self
     STDERR.puts " Text extraction" if verbose
     while mt.is_a?(Mimetype) and mt != Mimetype
       STDERR.puts "  Trying #{mt}" if verbose
-      mn = mt.to_s.gsub(/[^a-z0-9]/i,"_") + "__gettext"
+      mn = (mt.to_s.gsub(/[^a-z0-9]/i,"_") + "__gettext").to_sym
       if new_methods.include?( mn )
         begin
           rv = __send__( mn, filename, charset, layout )
